@@ -136,13 +136,13 @@ export default function GatekeeperScreen() {
                                         Trx Power Mining Official
                                     </div>
                                     <div className="channel-username">
-                                        @trxpowerminingOfficial
+                                        @trxbusinessOfficial
                                     </div>
                                 </div>
                             </div>
                             <div className="channel-card-right">
                                 <a
-                                    href="https://t.me/trxpowerminingOfficial"
+                                    href="https://t.me/trxbusinessOfficial"
                                     target="_blank"
                                     className="btn-join-channel"
                                 >

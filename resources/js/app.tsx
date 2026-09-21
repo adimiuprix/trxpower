@@ -2,6 +2,10 @@ import { createInertiaApp } from '@inertiajs/react';
 import { createRoot } from 'react-dom/client';
 import type { ComponentType } from 'react';
 import { TelegramProvider } from './providers/TelegramProvider';
+import { setupTelegramMock } from './utils/telegram-mock';
+
+// Siapkan mock environment lebih awal di dev mode agar data langsung tersedia saat initial render
+setupTelegramMock();
 
 void createInertiaApp({
     resolve: (name) => {

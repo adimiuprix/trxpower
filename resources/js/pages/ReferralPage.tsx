@@ -237,7 +237,7 @@ export default function ReferralPage() {
                             type="text"
                             id="referral-link-input"
                             readOnly
-                            value="https://t.me/trxpowermining_bot/app?startapp=ref_TRX777999"
+                            value="https://t.me/trxbusiness_bot/app?startapp=ref_TRX777999"
                         />
                         <button className="btn-copy">Copy</button>
                     </div>
