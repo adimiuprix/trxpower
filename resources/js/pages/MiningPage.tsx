@@ -3,7 +3,11 @@ import AppLayout from '@/layouts/AppLayout';
 export default function MiningPage() {
     return (
         <AppLayout>
-            <section id="view-plans" className="view-container" style={{ display: 'flex' }}>
+            <section
+                id="view-plans"
+                className="view-container"
+                style={{ display: 'flex' }}
+            >
                 <div id="plans-list-container" className="mining-plans-grid">
                     <div className="mining-card-box">
                         {/* Top section: 3D hardware miner thumbnail + Title & Daily income */}
@@ -18,9 +22,15 @@ export default function MiningPage() {
                             </div>
                             <div className="mining-info-col">
                                 <h4 className="mining-plan-title">TRX Basic</h4>
-                                <span className="plan-badge-popular">POPULAR</span>
-                                <span className="mining-daily-label">Daily income</span>
-                                <span className="mining-daily-percent">20%</span>
+                                <span className="plan-badge-popular">
+                                    POPULAR
+                                </span>
+                                <span className="mining-daily-label">
+                                    Daily income
+                                </span>
+                                <span className="mining-daily-percent">
+                                    20%
+                                </span>
                             </div>
                         </div>
 
@@ -37,8 +47,12 @@ export default function MiningPage() {
                                     <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
                                 </svg>
                                 <div className="metric-text-stack">
-                                    <span className="metric-label-text">Per day</span>
-                                    <span className="metric-val-text">+2.00 TRX</span>
+                                    <span className="metric-label-text">
+                                        Per day
+                                    </span>
+                                    <span className="metric-val-text">
+                                        +2.00 TRX
+                                    </span>
                                 </div>
                             </div>
 
@@ -57,8 +71,12 @@ export default function MiningPage() {
                                     <path d="M2 12v6c0 2.21 4.48 4 10 4s10-1.79 10-4v-6"></path>
                                 </svg>
                                 <div className="metric-text-stack">
-                                    <span className="metric-label-text">Total coin</span>
-                                    <span className="metric-val-text">10 TRX</span>
+                                    <span className="metric-label-text">
+                                        Total coin
+                                    </span>
+                                    <span className="metric-val-text">
+                                        10 TRX
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -100,8 +118,12 @@ export default function MiningPage() {
                             <div className="mining-info-col">
                                 <h4 className="mining-plan-title">TRX Pro</h4>
 
-                                <span className="mining-daily-label">Daily income</span>
-                                <span className="mining-daily-percent">22%</span>
+                                <span className="mining-daily-label">
+                                    Daily income
+                                </span>
+                                <span className="mining-daily-percent">
+                                    22%
+                                </span>
                             </div>
                         </div>
 
@@ -118,8 +140,12 @@ export default function MiningPage() {
                                     <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
                                 </svg>
                                 <div className="metric-text-stack">
-                                    <span className="metric-label-text">Per day</span>
-                                    <span className="metric-val-text">+5.00 TRX</span>
+                                    <span className="metric-label-text">
+                                        Per day
+                                    </span>
+                                    <span className="metric-val-text">
+                                        +5.00 TRX
+                                    </span>
                                 </div>
                             </div>
 
@@ -138,8 +164,12 @@ export default function MiningPage() {
                                     <path d="M2 12v6c0 2.21 4.48 4 10 4s10-1.79 10-4v-6"></path>
                                 </svg>
                                 <div className="metric-text-stack">
-                                    <span className="metric-label-text">Total coin</span>
-                                    <span className="metric-val-text">20 TRX</span>
+                                    <span className="metric-label-text">
+                                        Total coin
+                                    </span>
+                                    <span className="metric-val-text">
+                                        20 TRX
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -179,10 +209,16 @@ export default function MiningPage() {
                                 />
                             </div>
                             <div className="mining-info-col">
-                                <h4 className="mining-plan-title">TRX Advanced</h4>
+                                <h4 className="mining-plan-title">
+                                    TRX Advanced
+                                </h4>
 
-                                <span className="mining-daily-label">Daily income</span>
-                                <span className="mining-daily-percent">25%</span>
+                                <span className="mining-daily-label">
+                                    Daily income
+                                </span>
+                                <span className="mining-daily-percent">
+                                    25%
+                                </span>
                             </div>
                         </div>
 
@@ -199,8 +235,12 @@ export default function MiningPage() {
                                     <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
                                 </svg>
                                 <div className="metric-text-stack">
-                                    <span className="metric-label-text">Per day</span>
-                                    <span className="metric-val-text">+11.00 TRX</span>
+                                    <span className="metric-label-text">
+                                        Per day
+                                    </span>
+                                    <span className="metric-val-text">
+                                        +11.00 TRX
+                                    </span>
                                 </div>
                             </div>
 
@@ -219,8 +259,12 @@ export default function MiningPage() {
                                     <path d="M2 12v6c0 2.21 4.48 4 10 4s10-1.79 10-4v-6"></path>
                                 </svg>
                                 <div className="metric-text-stack">
-                                    <span className="metric-label-text">Total coin</span>
-                                    <span className="metric-val-text">50 TRX</span>
+                                    <span className="metric-label-text">
+                                        Total coin
+                                    </span>
+                                    <span className="metric-val-text">
+                                        50 TRX
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -260,10 +304,16 @@ export default function MiningPage() {
                                 />
                             </div>
                             <div className="mining-info-col">
-                                <h4 className="mining-plan-title">TRX Premium</h4>
+                                <h4 className="mining-plan-title">
+                                    TRX Premium
+                                </h4>
 
-                                <span className="mining-daily-label">Daily income</span>
-                                <span className="mining-daily-percent">28%</span>
+                                <span className="mining-daily-label">
+                                    Daily income
+                                </span>
+                                <span className="mining-daily-percent">
+                                    28%
+                                </span>
                             </div>
                         </div>
 
@@ -280,8 +330,12 @@ export default function MiningPage() {
                                     <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
                                 </svg>
                                 <div className="metric-text-stack">
-                                    <span className="metric-label-text">Per day</span>
-                                    <span className="metric-val-text">+22.00 TRX</span>
+                                    <span className="metric-label-text">
+                                        Per day
+                                    </span>
+                                    <span className="metric-val-text">
+                                        +22.00 TRX
+                                    </span>
                                 </div>
                             </div>
 
@@ -300,8 +354,12 @@ export default function MiningPage() {
                                     <path d="M2 12v6c0 2.21 4.48 4 10 4s10-1.79 10-4v-6"></path>
                                 </svg>
                                 <div className="metric-text-stack">
-                                    <span className="metric-label-text">Total coin</span>
-                                    <span className="metric-val-text">100 TRX</span>
+                                    <span className="metric-label-text">
+                                        Total coin
+                                    </span>
+                                    <span className="metric-val-text">
+                                        100 TRX
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -341,10 +399,16 @@ export default function MiningPage() {
                                 />
                             </div>
                             <div className="mining-info-col">
-                                <h4 className="mining-plan-title">TRX Master</h4>
+                                <h4 className="mining-plan-title">
+                                    TRX Master
+                                </h4>
 
-                                <span className="mining-daily-label">Daily income</span>
-                                <span className="mining-daily-percent">35%</span>
+                                <span className="mining-daily-label">
+                                    Daily income
+                                </span>
+                                <span className="mining-daily-percent">
+                                    35%
+                                </span>
                             </div>
                         </div>
 
@@ -361,8 +425,12 @@ export default function MiningPage() {
                                     <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
                                 </svg>
                                 <div className="metric-text-stack">
-                                    <span className="metric-label-text">Per day</span>
-                                    <span className="metric-val-text">+35.00 TRX</span>
+                                    <span className="metric-label-text">
+                                        Per day
+                                    </span>
+                                    <span className="metric-val-text">
+                                        +35.00 TRX
+                                    </span>
                                 </div>
                             </div>
 
@@ -381,8 +449,12 @@ export default function MiningPage() {
                                     <path d="M2 12v6c0 2.21 4.48 4 10 4s10-1.79 10-4v-6"></path>
                                 </svg>
                                 <div className="metric-text-stack">
-                                    <span className="metric-label-text">Total coin</span>
-                                    <span className="metric-val-text">200 TRX</span>
+                                    <span className="metric-label-text">
+                                        Total coin
+                                    </span>
+                                    <span className="metric-val-text">
+                                        200 TRX
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -413,7 +485,12 @@ export default function MiningPage() {
                     <div className="mining-card-box coming-soon-box">
                         <div className="coming-soon-inner">
                             <div className="coming-soon-icon">
-                                <svg width="44" height="44" viewBox="0 0 100 100" fill="none">
+                                <svg
+                                    width="44"
+                                    height="44"
+                                    viewBox="0 0 100 100"
+                                    fill="none"
+                                >
                                     <polygon
                                         points="50,10 88,32 50,90 12,32"
                                         stroke="#cbd5e1"
@@ -427,8 +504,16 @@ export default function MiningPage() {
                                         strokeWidth="3"
                                         strokeDasharray="3 3"
                                     ></polyline>
-                                    <polyline points="50,48 88,32" stroke="#cbd5e1" strokeWidth="3"></polyline>
-                                    <polyline points="50,48 12,32" stroke="#cbd5e1" strokeWidth="3"></polyline>
+                                    <polyline
+                                        points="50,48 88,32"
+                                        stroke="#cbd5e1"
+                                        strokeWidth="3"
+                                    ></polyline>
+                                    <polyline
+                                        points="50,48 12,32"
+                                        stroke="#cbd5e1"
+                                        strokeWidth="3"
+                                    ></polyline>
                                     <polygon
                                         points="50,22 76,35 50,76 24,35"
                                         stroke="#e2e8f0"
@@ -437,8 +522,14 @@ export default function MiningPage() {
                                     ></polygon>
                                 </svg>
                             </div>
-                            <h4 className="coming-soon-title">More Plans<br />Coming Soon</h4>
-                            <p className="coming-soon-subtitle">Stay tuned for more exciting opportunities</p>
+                            <h4 className="coming-soon-title">
+                                More Plans
+                                <br />
+                                Coming Soon
+                            </h4>
+                            <p className="coming-soon-subtitle">
+                                Stay tuned for more exciting opportunities
+                            </p>
                         </div>
                     </div>
                 </div>

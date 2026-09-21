@@ -1,17 +1,17 @@
-import { router, usePage } from '@inertiajs/react'
-import type { ReactNode } from 'react'
-import AppHeader from '@/components/AppHeader'
+import { router, usePage } from '@inertiajs/react';
+import type { ReactNode } from 'react';
+import AppHeader from '@/components/AppHeader';
 
 interface AppLayoutProps {
-    children: ReactNode
+    children: ReactNode;
 }
 
 export default function AppLayout({ children }: AppLayoutProps) {
-    const { url } = usePage()
+    const { url } = usePage();
 
     const isActive = (href: string) => {
-        return url === href
-    }
+        return url === href;
+    };
 
     return (
         <div className="app-viewport">
@@ -23,9 +23,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
             {/* ==========================================================
             MAIN CONTENT AREA (MULTI-VIEW SPA)
             ========================================================== */}
-            <main className="main-content">
-                {children}
-            </main>
+            <main className="main-content">{children}</main>
 
             {/* ==========================================================
             BOTTOM NAVIGATION BAR (Floating Pill Capsule Dock)
@@ -35,8 +33,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
                     {/* Tab 1: Home */}
                     <button
                         onClick={(e) => {
-                            e.preventDefault()
-                            router.visit('/')
+                            e.preventDefault();
+                            router.visit('/');
                         }}
                         className={`nav-tab-item ${isActive('/') ? 'active' : ''}`}
                     >
@@ -61,8 +59,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
                     {/* Tab 2: Mine */}
                     <button
                         onClick={(e) => {
-                            e.preventDefault()
-                            router.visit('/mine')
+                            e.preventDefault();
+                            router.visit('/mine');
                         }}
                         className={`nav-tab-item ${isActive('/mine') ? 'active' : ''}`}
                     >
@@ -87,10 +85,11 @@ export default function AppLayout({ children }: AppLayoutProps) {
                     {/* Tab 3: Team */}
                     <button
                         onClick={(e) => {
-                            e.preventDefault()
-                            router.visit('/referral')
+                            e.preventDefault();
+                            router.visit('/referral');
                         }}
-                        className={`nav-tab-item ${isActive('/referral') ? 'active' : ''}`}>
+                        className={`nav-tab-item ${isActive('/referral') ? 'active' : ''}`}
+                    >
                         <div className="nav-icon-bubble">
                             <svg
                                 width="20"
@@ -114,8 +113,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
                     {/* Tab 4: Profile */}
                     <button
                         onClick={(e) => {
-                            e.preventDefault()
-                            router.visit('/profile')
+                            e.preventDefault();
+                            router.visit('/profile');
                         }}
                         className={`nav-tab-item ${isActive('/profile') ? 'active' : ''}`}
                     >
@@ -139,5 +138,5 @@ export default function AppLayout({ children }: AppLayoutProps) {
                 </nav>
             </div>
         </div>
-    )
+    );
 }

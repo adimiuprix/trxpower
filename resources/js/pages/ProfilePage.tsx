@@ -28,9 +28,7 @@ export default function ProfilePage() {
                                 </svg>
                             </span>
                         </div>
-                        <span id="profile-username" style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}
-                            >@VestingSTX</span
-                        >
+                        <span id="profile-username" style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>@VestingSTX</span>
 
                         <div className="profile-id-chips-row">
                             <div
@@ -50,9 +48,7 @@ export default function ProfilePage() {
                                 </svg>
                                 <span
                                     >UID:
-                                    <strong
-                                        id="profile-user-id"
-                                        style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-main)' }}
+                                    <strong id="profile-user-id" style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-main)' }}
                                         >8092304058</strong
                                     ></span
                                 >
@@ -80,9 +76,7 @@ export default function ProfilePage() {
                                     <polyline points="19 12 12 19 5 12"></polyline>
                                 </svg>
                             </div>
-                            <span className="profile-stat-tag" style={{ color: '#10b981', background: 'rgba(16, 185, 129, 0.1)' }}
-                                >Deposits</span
-                            >
+                            <span className="profile-stat-tag" style={{ color: '#10b981', background: 'rgba(16, 185, 129, 0.1)' }}>Deposits</span>
                         </div>
                         <div>
                             <span className="profile-stat-label">Deposit Balance</span>
@@ -94,10 +88,7 @@ export default function ProfilePage() {
                     {/* Stat 2: Withdrawable Balance (Claimed Mining Earnings) */}
                     <div className="profile-stat-box">
                         <div className="profile-stat-top">
-                            <div
-                                className="profile-stat-icon-wrap"
-                                style={{ background: 'rgba(225, 29, 72, 0.12)', color: 'var(--trx-red)' }}
-                            >
+                            <div className="profile-stat-icon-wrap" style={{ background: 'rgba(225, 29, 72, 0.12)', color: 'var(--trx-red)' }}>
                                 <svg
                                     width="18"
                                     height="18"
@@ -117,9 +108,7 @@ export default function ProfilePage() {
                         </div>
                         <div>
                             <span className="profile-stat-label">Withdrawable Balance</span>
-                            <div className="profile-stat-val" id="profile-withdrawable" style={{ color: 'var(--trx-red)' }}>
-                                0.0032 TRX
-                            </div>
+                            <div className="profile-stat-val" id="profile-withdrawable" style={{ color: 'var(--trx-red)' }}>0.1875 TRX</div>
                             <span className="profile-stat-sub">Ready for payout</span>
                         </div>
                     </div>
@@ -140,9 +129,7 @@ export default function ProfilePage() {
                                     <polyline points="5 12 12 5 19 12"></polyline>
                                 </svg>
                             </div>
-                            <span className="profile-stat-tag" style={{ color: '#ef4444', background: 'rgba(239, 68, 68, 0.1)' }}
-                                >Payouts</span
-                            >
+                            <span className="profile-stat-tag" style={{ color: '#ef4444', background: 'rgba(239, 68, 68, 0.1)' }}>Payouts</span>
                         </div>
                         <div>
                             <span className="profile-stat-label">Total Withdrawn</span>
@@ -168,13 +155,11 @@ export default function ProfilePage() {
                                     <circle cx="12" cy="12" r="1"></circle>
                                 </svg>
                             </div>
-                            <span className="profile-stat-tag" style={{ color: '#0ea5e9', background: 'rgba(14, 165, 233, 0.1)' }}
-                                >Mined</span
-                            >
+                            <span className="profile-stat-tag" style={{ color: '#0ea5e9', background: 'rgba(14, 165, 233, 0.1)' }}>Mined</span>
                         </div>
                         <div>
                             <span className="profile-stat-label">Total Mined</span>
-                            <div className="profile-stat-val" id="profile-total-mined">0.0032 TRX</div>
+                            <div className="profile-stat-val" id="profile-total-mined">0.1875 TRX</div>
                             <span className="profile-stat-sub">Lifetime passive rewards</span>
                         </div>
                     </div>
@@ -192,10 +177,9 @@ export default function ProfilePage() {
                                 color: 'rgb(245, 158, 11)',
                                 background: 'rgba(245, 158, 11, 0.12)',
                                 padding: '2px 7px',
-                                borderRadius: '4px'
-                            }}
-                            >Not Bound</span
-                        >
+                                borderRadius: '4px',
+                            }}>
+                            Not Bound</span>
                     </div>
                     <div className="copy-input-row">
                         <input
@@ -206,11 +190,8 @@ export default function ProfilePage() {
                         />
                         <button className="btn-copy">Save</button>
                     </div>
-                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}
-                        >Payouts are sent automatically to this TRON address upon withdrawal request.</span
-                    >
+                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Payouts are sent automatically to this TRON address upon withdrawal request.</span>
                 </div>
-
                 {/* 4. Transaction Ledger History Section */}
                 <div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
@@ -222,7 +203,7 @@ export default function ProfilePage() {
                                 margin: 0,
                                 display: 'flex',
                                 alignItems: 'center',
-                                gap: '6px'
+                                gap: '6px',
                             }}
                         >
                             <span>Transaction History</span>
@@ -234,9 +215,9 @@ export default function ProfilePage() {
                                     color: 'var(--trx-red)',
                                     background: 'rgba(255, 30, 64, 0.12)',
                                     padding: '1px 7px',
-                                    borderRadius: '999px'
+                                    borderRadius: '999px',
                                 }}
-                                >2
+                                >6
                             </span>
                         </h4>
                         <button
@@ -250,17 +231,10 @@ export default function ProfilePage() {
                                 fontWeight: 600,
                                 display: 'inline-flex',
                                 alignItems: 'center',
-                                gap: '4px'
+                                gap: '4px',
                             }}
                         >
-                            <svg
-                                width="13"
-                                height="13"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2.5"
-                            >
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                                 <path d="M23 4v6h-6"></path>
                                 <path d="M1 20v-6h6"></path>
                                 <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
@@ -320,7 +294,121 @@ export default function ProfilePage() {
                                     </svg>
                                 </div>
                                 <div className="tx-card-details">
-                                    <span className="tx-card-title">Claimed mining yield (0.001386 TRX) from free plan &amp; active rigs</span>
+                                    <span className="tx-card-title">Claimed mining yield (0.178022 TRX) from free plan &amp; active rigs</span>
+                                    <span className="tx-card-meta">21 Sept 2026 • 08:38</span>
+                                </div>
+                            </div>
+                            <div className="tx-card-right">
+                                <span className="tx-card-amount tx-positive">+0.1780 TRX</span>
+                                <span className="tx-card-balance-after">Bal: 0.1875</span>
+                            </div>
+                        </div>
+
+                        <div className="tx-item-card">
+                            <div className="tx-card-left">
+                                <div className="tx-card-icon tx-mining">
+                                    <svg
+                                        width="17"
+                                        height="17"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2.2"
+                                    >
+                                        <path d="M14.5 2.5L21.5 9.5L19 12L12 5L14.5 2.5Z"></path>
+                                        <path d="M13 6L3 16L5 21L10 19L20 9"></path>
+                                        <circle cx="12" cy="12" r="1"></circle>
+                                    </svg>
+                                </div>
+                                <div className="tx-card-details">
+                                    <span className="tx-card-title">Claimed mining yield (0.000011 TRX) from free plan &amp; active rigs</span>
+                                    <span className="tx-card-meta">19 Sept 2026 • 13:55</span>
+                                </div>
+                            </div>
+                            <div className="tx-card-right">
+                                <span className="tx-card-amount tx-positive">+0.0000 TRX</span>
+                                <span className="tx-card-balance-after">Bal: 0.0095</span>
+                            </div>
+                        </div>
+
+                        <div className="tx-item-card">
+                            <div className="tx-card-left">
+                                <div className="tx-card-icon tx-mining">
+                                    <svg
+                                        width="17"
+                                        height="17"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2.2"
+                                    >
+                                        <path d="M14.5 2.5L21.5 9.5L19 12L12 5L14.5 2.5Z"></path>
+                                        <path d="M13 6L3 16L5 21L10 19L20 9"></path>
+                                        <circle cx="12" cy="12" r="1"></circle>
+                                    </svg>
+                                </div>
+                                <div className="tx-card-details">
+                                    <span className="tx-card-title"
+                                        >Claimed mining yield (0.000021 TRX) from free plan &amp; active rigs</span
+                                    >
+                                    <span className="tx-card-meta">19 Sept 2026 • 13:54</span>
+                                </div>
+                            </div>
+                            <div className="tx-card-right">
+                                <span className="tx-card-amount tx-positive">+0.0000 TRX</span>
+                                <span className="tx-card-balance-after">Bal: 0.0095</span>
+                            </div>
+                        </div>
+
+                        <div className="tx-item-card">
+                            <div className="tx-card-left">
+                                <div className="tx-card-icon tx-mining">
+                                    <svg
+                                        width="17"
+                                        height="17"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2.2"
+                                    >
+                                        <path d="M14.5 2.5L21.5 9.5L19 12L12 5L14.5 2.5Z"></path>
+                                        <path d="M13 6L3 16L5 21L10 19L20 9"></path>
+                                        <circle cx="12" cy="12" r="1"></circle>
+                                    </svg>
+                                </div>
+                                <div className="tx-card-details">
+                                    <span className="tx-card-title"
+                                        >Claimed mining yield (0.006197 TRX) from free plan &amp; active rigs</span
+                                    >
+                                    <span className="tx-card-meta">19 Sept 2026 • 13:54</span>
+                                </div>
+                            </div>
+                            <div className="tx-card-right">
+                                <span className="tx-card-amount tx-positive">+0.0062 TRX</span>
+                                <span className="tx-card-balance-after">Bal: 0.0094</span>
+                            </div>
+                        </div>
+
+                        <div className="tx-item-card">
+                            <div className="tx-card-left">
+                                <div className="tx-card-icon tx-mining">
+                                    <svg
+                                        width="17"
+                                        height="17"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2.2"
+                                    >
+                                        <path d="M14.5 2.5L21.5 9.5L19 12L12 5L14.5 2.5Z"></path>
+                                        <path d="M13 6L3 16L5 21L10 19L20 9"></path>
+                                        <circle cx="12" cy="12" r="1"></circle>
+                                    </svg>
+                                </div>
+                                <div className="tx-card-details">
+                                    <span className="tx-card-title"
+                                        >Claimed mining yield (0.001386 TRX) from free plan &amp; active rigs</span
+                                    >
                                     <span className="tx-card-meta">19 Sept 2026 • 12:25</span>
                                 </div>
                             </div>

@@ -2,8 +2,12 @@ import AppLayout from '@/layouts/AppLayout';
 
 export default function DepositPage() {
     return (
-        <AppLayout title="Mining - TRX Power Mining">
-            <section id="view-deposit" className="view-container" style={{ display: 'flex' }}>
+        <AppLayout>
+            <section
+                id="view-deposit"
+                className="view-container"
+                style={{ display: 'flex' }}
+            >
                 {/* 1. Top Header with Back to Home */}
                 <div className="deposit-view-header">
                     <button type="button" className="btn-deposit-back">
@@ -24,7 +28,9 @@ export default function DepositPage() {
                     </button>
                     <div className="deposit-header-title-box">
                         <h3 className="deposit-header-title">Deposit USDT</h3>
-                        <span className="deposit-network-tag">BEP-20 (BSC)</span>
+                        <span className="deposit-network-tag">
+                            BEP-20 (BSC)
+                        </span>
                     </div>
                     <div className="deposit-rate-pill">
                         <span>1 USDT = 3 TRX</span>
@@ -32,19 +38,36 @@ export default function DepositPage() {
                 </div>
 
                 {/* Top Cute Mini Loading Banner (5 Seconds Countdown) */}
-                <div className="deposit-top-loading-bar" id="deposit-top-loading" style={{ display: 'none' }}>
+                <div
+                    className="deposit-top-loading-bar"
+                    id="deposit-top-loading"
+                    style={{ display: 'none' }}
+                >
                     <div className="top-loading-inner">
                         <div className="top-loading-spinner-ring"></div>
                         <div className="top-loading-text-stack">
-                            <span className="top-loading-headline">Verifying Blockchain Network...</span>
-                            <span className="top-loading-subtext" id="top-loading-status-text"
-                                >Scanning BSC / BEP-20 mempool...</span
+                            <span className="top-loading-headline">
+                                Verifying Blockchain Network...
+                            </span>
+                            <span
+                                className="top-loading-subtext"
+                                id="top-loading-status-text"
                             >
+                                Scanning BSC / BEP-20 mempool...
+                            </span>
                         </div>
-                        <span className="top-loading-countdown-tag" id="top-loading-countdown-num">5s</span>
+                        <span
+                            className="top-loading-countdown-tag"
+                            id="top-loading-countdown-num"
+                        >
+                            5s
+                        </span>
                     </div>
                     <div className="top-loading-track">
-                        <div className="top-loading-progress" id="top-loading-progress-bar"></div>
+                        <div
+                            className="top-loading-progress"
+                            id="top-loading-progress-bar"
+                        ></div>
                     </div>
                 </div>
 
@@ -59,23 +82,37 @@ export default function DepositPage() {
                         />
                     </div>
                     <div className="deposit-qr-caption">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.5">
+                        <svg
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="#059669"
+                            strokeWidth="2.5"
+                        >
                             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
                         </svg>
-                        <span>Scan QR with TrustWallet, Binance, or TronLink</span>
+                        <span>
+                            Scan QR with TrustWallet, Binance, or TronLink
+                        </span>
                     </div>
                 </div>
 
                 {/* 3. Deposit Address Card */}
                 <div className="deposit-address-card">
                     <div className="deposit-addr-header">
-                        <span className="deposit-field-label">Official Deposit Address</span>
+                        <span className="deposit-field-label">
+                            Official Deposit Address
+                        </span>
                         <span className="deposit-net-badge">BSC / BEP-20</span>
                     </div>
                     <div className="deposit-addr-row">
-                        <span className="deposit-addr-text" id="deposit-full-address-val"
-                            >0x65CD568D7068F20de91547E80A1A7212226AFF86</span
+                        <span
+                            className="deposit-addr-text"
+                            id="deposit-full-address-val"
                         >
+                            0x65CD568D7068F20de91547E80A1A7212226AFF86
+                        </span>
                         <button type="button" className="btn-copy-addr">
                             <svg
                                 width="15"
@@ -85,7 +122,14 @@ export default function DepositPage() {
                                 stroke="currentColor"
                                 strokeWidth="2.2"
                             >
-                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <rect
+                                    x="9"
+                                    y="9"
+                                    width="13"
+                                    height="13"
+                                    rx="2"
+                                    ry="2"
+                                ></rect>
                                 <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                             </svg>
                             <span>Copy</span>
@@ -96,7 +140,9 @@ export default function DepositPage() {
                 {/* 4. Amount Selection Presets (3, 5, 10, 15, 20, 50, 100) */}
                 <div className="deposit-amount-section">
                     <div className="deposit-section-label-row">
-                        <span className="deposit-field-label">Select Deposit Amount (USDT)</span>
+                        <span className="deposit-field-label">
+                            Select Deposit Amount (USDT)
+                        </span>
                         <span className="deposit-min-tag">Min. $3</span>
                     </div>
                     <div className="amount-presets-grid">
@@ -186,7 +232,10 @@ export default function DepositPage() {
                                 strokeWidth="2.5"
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
-                                style={{ verticalAlign: 'middle', marginRight: '4px' }}
+                                style={{
+                                    verticalAlign: 'middle',
+                                    marginRight: '4px',
+                                }}
                             >
                                 <circle cx="12" cy="12" r="10"></circle>
                                 <line x1="12" y1="8" x2="12" y2="12"></line>
@@ -194,14 +243,25 @@ export default function DepositPage() {
                             </svg>
                             Send Exact Amount
                         </span>
-                        <span className="exact-receive-badge"
-                            >You Get: <strong id="deposit-credited-trx-display">+9.00 TRX</strong></span
-                        >
+                        <span className="exact-receive-badge">
+                            You Get:{' '}
+                            <strong id="deposit-credited-trx-display">
+                                +9.00 TRX
+                            </strong>
+                        </span>
                     </div>
                     <div className="exact-amount-main-row">
                         <div className="exact-num-col">
-                            <span className="exact-amount-val" id="deposit-exact-amount-display">3.015 USDT</span>
-                            <span className="exact-amount-sub">Send this exact amount to identify your transaction</span>
+                            <span
+                                className="exact-amount-val"
+                                id="deposit-exact-amount-display"
+                            >
+                                3.015 USDT
+                            </span>
+                            <span className="exact-amount-sub">
+                                Send this exact amount to identify your
+                                transaction
+                            </span>
                         </div>
                         <button type="button" className="btn-copy-exact">
                             <svg
@@ -212,7 +272,14 @@ export default function DepositPage() {
                                 stroke="currentColor"
                                 strokeWidth="2.2"
                             >
-                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <rect
+                                    x="9"
+                                    y="9"
+                                    width="13"
+                                    height="13"
+                                    rx="2"
+                                    ry="2"
+                                ></rect>
                                 <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                             </svg>
                             <span>Copy</span>
@@ -233,19 +300,21 @@ export default function DepositPage() {
                             strokeLinecap="round"
                             strokeLinejoin="round"
                         >
-                            <path
-                                d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
-                            ></path>
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
                             <line x1="12" y1="9" x2="12" y2="13"></line>
                             <line x1="12" y1="17" x2="12.01" y2="17"></line>
                         </svg>
                     </div>
                     <div className="notice-content">
-                        <strong>Important Notice: Minimum Deposit ~3 USDT (min 2.90 USDT)</strong>
+                        <strong>
+                            Important Notice: Minimum Deposit ~3 USDT (min 2.90
+                            USDT)
+                        </strong>
                         <p>
-                            Send only official <strong>BEP-20 USDT</strong> (Binance-Peg BSC-USD). Verified automatically on
-                            <strong>BscScan &amp; BSC RPC</strong>. Fake or unverified tokens will be automatically
-                            rejected.
+                            Send only official <strong>BEP-20 USDT</strong>{' '}
+                            (Binance-Peg BSC-USD). Verified automatically on
+                            <strong>BscScan &amp; BSC RPC</strong>. Fake or
+                            unverified tokens will be automatically rejected.
                         </p>
                     </div>
                 </div>
@@ -257,16 +326,23 @@ export default function DepositPage() {
                         className="btn-verify-payment-main"
                         id="btn-verify-payment-main"
                     >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ marginRight: '6px' }}>
+                        <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="currentColor"
+                            style={{ marginRight: '6px' }}
+                        >
                             <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
                         </svg>
                         <span>Verify Payment</span>
                     </button>
-                    <span className="deposit-action-tip"
-                        >Balance is credited to your account immediately upon entering TXID</span
-                    >
+                    <span className="deposit-action-tip">
+                        Balance is credited to your account immediately upon
+                        entering TXID
+                    </span>
                 </div>
             </section>
         </AppLayout>
-    )
+    );
 }

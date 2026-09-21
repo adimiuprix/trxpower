@@ -159,7 +159,7 @@ body {
 /* Telegram Mini App Wrapper Container */
 .app-viewport {
     width: 100%;
-    max-width: 720px;
+    max-width: 440px;
     min-height: 100vh;
     background-color: var(--bg-base);
     position: relative;
