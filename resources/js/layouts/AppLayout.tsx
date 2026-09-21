@@ -1,17 +1,26 @@
 import { router, usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import AppHeader from '@/components/AppHeader';
+import { TelegramProvider, useTelegramContext } from '@/providers/TelegramProvider';
+import AuthLoadingScreen from '@/components/AuthLoadingScreen';
 
 interface AppLayoutProps {
     children: ReactNode;
 }
 
-export default function AppLayout({ children }: AppLayoutProps) {
+function AppLayoutContent({ children }: AppLayoutProps) {
     const { url } = usePage();
+    const { isAuthenticating } = useTelegramContext();
+
+    // Show loading screen saat authenticating
+    if (isAuthenticating) {
+        return <AuthLoadingScreen />;
+    }
 
     const isActive = (href: string) => {
         return url === href;
     };
+
 
     return (
         <div className="app-viewport">
@@ -138,5 +147,13 @@ export default function AppLayout({ children }: AppLayoutProps) {
                 </nav>
             </div>
         </div>
+    );
+}
+
+export default function AppLayout({ children }: AppLayoutProps) {
+    return (
+        <TelegramProvider>
+            <AppLayoutContent>{children}</AppLayoutContent>
+        </TelegramProvider>
     );
 }

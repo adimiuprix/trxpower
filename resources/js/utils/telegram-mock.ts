@@ -6,12 +6,12 @@ import { mockTelegramEnv, isTMA } from '@tma.js/sdk';
 export function isTelegramEnvironment(): boolean {
     if (typeof window === 'undefined') return false;
 
-    // Cek window.Telegram.WebApp (official CDN)
-    if (window.Telegram?.WebApp?.initData && window.Telegram.WebApp.initData.length > 0) {
-        return true;
+    // Jika ini adalah mock buatan kita, bukan Telegram asli
+    if ((window.Telegram?.WebApp as any)?._isMock) {
+        return false;
     }
 
-    // Cek URL params / hash
+    // 1. Cek parameter URL hash yang selalu disuntikkan Telegram client
     if (
         window.location.hash.includes('tgWebAppData') ||
         window.location.search.includes('tgWebAppData')
@@ -19,7 +19,24 @@ export function isTelegramEnvironment(): boolean {
         return true;
     }
 
-    // Cek TMA bridge
+    // 2. Cek native proxy interface Telegram (Android, iOS, Desktop)
+    if (
+        Boolean((window as any).TelegramWebviewProxy) ||
+        Boolean((window as any).webkit?.messageHandlers?.webApp)
+    ) {
+        return true;
+    }
+
+    // 3. Cek window.Telegram.WebApp asli
+    if (
+        window.Telegram?.WebApp?.initData &&
+        window.Telegram.WebApp.initData.length > 0 &&
+        !(window.Telegram.WebApp as any)._isMock
+    ) {
+        return true;
+    }
+
+    // 4. Cek TMA bridge
     try {
         return isTMA();
     } catch {
@@ -72,6 +89,7 @@ export function setupTelegramMock() {
         // 1. Mock window.Telegram.WebApp (Official SDK CDN)
         window.Telegram = window.Telegram || {};
         window.Telegram.WebApp = {
+            _isMock: true,
             initData: mockInitDataRaw,
             initDataUnsafe: {
                 query_id: 'mock_query_99281932',

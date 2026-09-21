@@ -43,6 +43,7 @@ export interface TelegramWebAppThemeParams {
 }
 
 export interface TelegramWebApp {
+    _isMock?: boolean;
     initData: string;
     initDataUnsafe: TelegramWebAppInitDataUnsafe;
     version: string;

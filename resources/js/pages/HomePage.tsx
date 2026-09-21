@@ -1,6 +1,9 @@
 import AppLayout from '@/layouts/AppLayout';
+import { useTelegramUser } from '@/providers/TelegramProvider';
 
 export default function HomePage() {
+    const user = useTelegramUser();
+
     return (
         <AppLayout>
             <section
@@ -22,7 +25,7 @@ export default function HomePage() {
                                 id="card-user-avatar"
                             >
                                 <img
-                                    src="https://t.me/i/userpic/320/uYvCe8GaVfT3ZQRpvN-T_qxJYr5vGf-VLLfxlY09fBk0Q6G8Zjoxf-nyppRdq_tg.svg"
+                                    src={user?.photoUrl || "https://t.me/i/userpic/320/uYvCe8GaVfT3ZQRpvN-T_qxJYr5vGf-VLLfxlY09fBk0Q6G8Zjoxf-nyppRdq_tg.svg"}
                                     alt="avatar"
                                 />
                             </div>
@@ -30,7 +33,7 @@ export default function HomePage() {
                                 className="card-username-text"
                                 id="card-username-display"
                             >
-                                @VestingSTX
+                                {user?.username ? `@${user.username}` : user?.firstName || 'Guest'}
                             </span>
                         </div>
 

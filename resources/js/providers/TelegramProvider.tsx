@@ -1,10 +1,44 @@
 import { init, initData } from '@tma.js/sdk-react';
-import { ReactNode, useEffect, useState } from 'react';
+import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import { setupTelegramMock } from '@/utils/telegram-mock';
+import { useTelegram } from '@/hooks/useTelegram';
+import type { TelegramUser } from '@/hooks/useTelegram';
+import type { TelegramWebAppThemeParams } from '@/types/telegram';
+import { telegramAuthService } from '@/services/telegramAuthService';
 
 interface TelegramProviderProps {
     children: ReactNode;
 }
+
+// Context untuk menyimpan Telegram data
+interface TelegramContextValue {
+    user: TelegramUser | undefined;
+    initData: string;
+    initDataRaw: string;
+    startParam: string | undefined;
+    platform: string;
+    version: string;
+    isDark: boolean;
+    isTMA: boolean;
+    themeParams: TelegramWebAppThemeParams;
+    viewportHeight: number;
+    isExpanded: boolean;
+    mainButton: ReturnType<typeof useTelegram>['mainButton'];
+    backButton: ReturnType<typeof useTelegram>['backButton'];
+    ready: () => void;
+    expand: () => void;
+    close: () => void;
+    showAlert: (message: string, callback?: () => void) => void;
+    showConfirm: (message: string, callback?: (confirmed: boolean) => void) => void;
+    openLink: (url: string, options?: { tryInstantView?: boolean }) => void;
+    openTelegramLink: (url: string) => void;
+    haptic: ReturnType<typeof useTelegram>['haptic'];
+    raw: ReturnType<typeof useTelegram>['raw'];
+    isAuthenticating: boolean;
+    isAuthenticated: boolean;
+}
+
+const TelegramContext = createContext<TelegramContextValue | undefined>(undefined);
 
 /**
  * Provider untuk Telegram Mini App SDK
@@ -15,9 +49,13 @@ interface TelegramProviderProps {
  * - Restores initData safely
  * - Auto mock environment di development mode
  * - Graceful error handling (tidak block rendering)
+ * - Menyediakan Telegram data via Context untuk semua children
+ * - Auto-authentication: Check dan simpan user ke database
  */
 export function TelegramProvider({ children }: TelegramProviderProps) {
     const [isInitialized, setIsInitialized] = useState(false);
+    const [isAuthenticating, setIsAuthenticating] = useState(false);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
 
     useEffect(() => {
         try {
@@ -55,5 +93,124 @@ export function TelegramProvider({ children }: TelegramProviderProps) {
         }
     }, []);
 
-    return <>{children}</>;
+    // Dapatkan semua Telegram data dari hook
+    const telegram = useTelegram();
+
+    // Auto-authentication saat user data tersedia
+    useEffect(() => {
+        async function authenticateUser() {
+            // Skip jika tidak ada user data atau sudah authenticated
+            if (!telegram.user || isAuthenticated || isAuthenticating) {
+                return;
+            }
+
+            // Skip jika sudah ada token di localStorage
+            if (telegramAuthService.isAuthenticated()) {
+                setIsAuthenticated(true);
+                console.log('✅ User already authenticated (token found)');
+                return;
+            }
+
+            setIsAuthenticating(true);
+            console.log('🔐 Authenticating user with Telegram initData...', {
+                telegram_id: telegram.user.id,
+                username: telegram.user.username,
+            });
+
+            try {
+                // Get initData from Telegram WebApp
+                const initData = telegram.initDataRaw;
+
+                if (!initData) {
+                    console.error('❌ No initData available from Telegram');
+                    setIsAuthenticating(false);
+                    return;
+                }
+
+                // Authenticate with initData (secure)
+                const result = await telegramAuthService.authenticate({
+                    initData,
+                });
+
+                if (result.success) {
+                    setIsAuthenticated(true);
+                    
+                    if (result.data?.is_new_user) {
+                        console.log('🎉 New user created in database!');
+                        telegram.haptic.notification('success');
+                    } else {
+                        console.log('👋 Welcome back!');
+                    }
+                } else {
+                    console.error('❌ Authentication failed:', result.message);
+                }
+            } catch (error) {
+                console.error('❌ Authentication error:', error);
+            } finally {
+                setIsAuthenticating(false);
+            }
+        }
+
+        authenticateUser();
+    }, [telegram.user, isAuthenticated, isAuthenticating]);
+
+    return (
+        <TelegramContext.Provider 
+            value={{
+                ...telegram,
+                isAuthenticating,
+                isAuthenticated,
+            }}
+        >
+            {children}
+        </TelegramContext.Provider>
+    );
+}
+
+/**
+ * Hook untuk mengakses Telegram data di halaman manapun
+ * 
+ * @example
+ * ```tsx
+ * function MyPage() {
+ *   const { user, isDark, showAlert } = useTelegramContext();
+ *   
+ *   return (
+ *     <div>
+ *       <h1>Hello {user?.firstName}!</h1>
+ *       <button onClick={() => showAlert('Hello!')}>Alert</button>
+ *     </div>
+ *   );
+ * }
+ * ```
+ */
+export function useTelegramContext() {
+    const context = useContext(TelegramContext);
+    
+    if (context === undefined) {
+        throw new Error('useTelegramContext must be used within TelegramProvider');
+    }
+    
+    return context;
+}
+
+/**
+ * Hook untuk mengakses Telegram user data secara langsung
+ * 
+ * @example
+ * ```tsx
+ * function UserProfile() {
+ *   const user = useTelegramUser();
+ *   
+ *   if (!user) {
+ *     return <div>Loading user data...</div>;
+ *   }
+ *   
+ *   return <div><h2>{user.firstName}</h2></div>;
+ * }
+ * ```
+ */
+export function useTelegramUser(): TelegramUser | undefined {
+    const { user } = useTelegramContext();
+    return user;
 }

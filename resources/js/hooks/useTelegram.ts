@@ -67,11 +67,14 @@ export function useTelegram() {
     const startParam = tgWebApp?.initDataUnsafe?.start_param;
 
     // 5. Environment & Platform
+    const isMock = Boolean(tgWebApp?._isMock);
     const platform = tgWebApp?.platform || 'unknown';
     const version = tgWebApp?.version || 'unknown';
     const isTMA = Boolean(
-        (tgWebApp?.initData && tgWebApp.initData.length > 0) ||
-        (typeof window !== 'undefined' && window.location.hash.includes('tgWebAppData'))
+        !isMock && (
+            (tgWebApp?.initData && tgWebApp.initData.length > 0) ||
+            (typeof window !== 'undefined' && window.location.hash.includes('tgWebAppData'))
+        )
     );
 
     // 6. Theme & Colors
@@ -233,6 +236,7 @@ export function useTelegram() {
         version,
         isDark,
         isTMA,
+        isMock,
         themeParams,
         viewportHeight,
         isExpanded,

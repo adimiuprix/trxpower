@@ -1,6 +1,20 @@
 import AppLayout from '@/layouts/AppLayout';
+import { useTelegramContext, useTelegramUser } from '@/providers/TelegramProvider';
 
 export default function ProfilePage() {
+    // Akses data user dari Telegram Context
+    const user = useTelegramUser();
+    const { isDark, showAlert, haptic } = useTelegramContext();
+
+    // Handler untuk copy user ID
+    const handleCopyUserId = () => {
+        if (user?.id) {
+            navigator.clipboard.writeText(user.id.toString());
+            haptic.notification('success');
+            showAlert('User ID copied to clipboard!');
+        }
+    };
+
     return (
         <AppLayout>
             <section id="view-profile" className="view-container" style={{ display: 'flex' }}>
@@ -9,7 +23,7 @@ export default function ProfilePage() {
                     <div className="profile-avatar-wrap">
                         <div className="profile-avatar-circle" id="profile-avatar-container">
                             <img
-                                src="https://t.me/i/userpic/320/uYvCe8GaVfT3ZQRpvN-T_qxJYr5vGf-VLLfxlY09fBk0Q6G8Zjoxf-nyppRdq_tg.svg"
+                                src={user?.photoUrl || "https://t.me/i/userpic/320/uYvCe8GaVfT3ZQRpvN-T_qxJYr5vGf-VLLfxlY09fBk0Q6G8Zjoxf-nyppRdq_tg.svg"}
                                 alt="User Avatar"
                                 className="profile-avatar-img"
                             />
@@ -19,21 +33,29 @@ export default function ProfilePage() {
 
                     <div className="profile-info-wrap">
                         <div className="profile-name-row">
-                            <h3 className="profile-name-text" id="profile-name">Vesting STX</h3>
-                            <span className="profile-verified-badge" title="Verified Miner">
-                                <svg width="17" height="17" viewBox="0 0 24 24" fill="#0284c7">
-                                    <path
-                                        d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"
-                                    ></path>
-                                </svg>
-                            </span>
+                            <h3 className="profile-name-text" id="profile-name">
+                                {user?.firstName} {user?.lastName || ''}
+                            </h3>
+                            {user?.isPremium && (
+                                <span className="profile-verified-badge" title="Telegram Premium User">
+                                    <svg width="17" height="17" viewBox="0 0 24 24" fill="#0284c7">
+                                        <path
+                                            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"
+                                        ></path>
+                                    </svg>
+                                </span>
+                            )}
                         </div>
-                        <span id="profile-username" style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>@VestingSTX</span>
+                        <span id="profile-username" style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>
+                            {user?.username ? `@${user.username}` : 'No username'}
+                        </span>
 
                         <div className="profile-id-chips-row">
                             <div
                                 className="profile-chip profile-uid-btn"
                                 title="Click to copy User ID"
+                                onClick={handleCopyUserId}
+                                style={{ cursor: 'pointer' }}
                             >
                                 <svg
                                     width="12"
@@ -49,11 +71,13 @@ export default function ProfilePage() {
                                 <span
                                     >UID:
                                     <strong id="profile-user-id" style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-main)' }}
-                                        >8092304058</strong
+                                        >{user?.id || 'N/A'}</strong
                                     ></span
                                 >
                             </div>
-                            <span className="profile-tier-badge" id="profile-vip-badge">Verified Miner</span>
+                            <span className="profile-tier-badge" id="profile-vip-badge">
+                                {user?.isPremium ? 'Premium User' : 'Verified Miner'}
+                            </span>
                         </div>
                     </div>
                 </div>
