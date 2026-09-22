@@ -9,7 +9,18 @@ const toaster = createToaster({
     duration: 3000,
 });
 
-export default function ProfilePage() {
+interface financeOverView {
+    deposit: number;
+    withdrawable: number;
+    withdrawn: number;
+    mined: number;
+}
+
+interface ProfilePageProps {
+    finance: financeOverView;
+}
+
+export default function ProfilePage({ finance }: ProfilePageProps) {
     // Akses data user dari Telegram Context
     const user = useTelegramUser();
     const { showAlert, haptic, dbUser } = useTelegramContext();
@@ -36,7 +47,7 @@ export default function ProfilePage() {
     // Handler untuk save address
     const handleSaveAddress = async () => {
         // Validasi: address tidak boleh kosong
-        if (!payoutAddress || payoutAddress.trim() === '') {
+        if (!payoutAddress?.trim()) {
             haptic.notification('error');
             toaster.semantic.error('Please enter a TRON address');
             return;
@@ -100,7 +111,7 @@ export default function ProfilePage() {
 
     return (
         <AppLayout>
-            <section id="view-profile" className="view-container" style={{ display: 'flex' }}>
+            <section className="view-container" style={{ display: 'flex' }}>
                 {/* 1. Top Profile Header Card */}
                 <div className="profile-header-card">
                     <div className="profile-avatar-wrap">
@@ -122,9 +133,7 @@ export default function ProfilePage() {
                             {user?.isPremium && (
                                 <span className="profile-verified-badge" title="Telegram Premium User">
                                     <svg width="17" height="17" viewBox="0 0 24 24" fill="#0284c7">
-                                        <path
-                                            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"
-                                        ></path>
+                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"></path>
                                     </svg>
                                 </span>
                             )}
@@ -152,7 +161,7 @@ export default function ProfilePage() {
                                     <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                                 </svg>
                                 <span>UID:
-                                    <strong id="profile-user-id" style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-main)' }}>{user?.id || 'N/A'}</strong>
+                                    <strong style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-main)' }}>{user?.id || 'N/A'}</strong>
                                 </span>
                             </div>
                             <span className="profile-tier-badge" id="profile-vip-badge">
@@ -184,7 +193,8 @@ export default function ProfilePage() {
                         </div>
                         <div>
                             <span className="profile-stat-label">Deposit Balance</span>
-                            <div className="profile-stat-val" id="profile-deposited">0.00 TRX</div>
+
+                            <div className="profile-stat-val" id="profile-deposited">{finance.deposit} TRX</div>
                             <span className="profile-stat-sub">For mining activation</span>
                         </div>
                     </div>
