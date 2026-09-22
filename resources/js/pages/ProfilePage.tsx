@@ -1,6 +1,13 @@
 import AppLayout from '@/layouts/AppLayout';
 import { useTelegramContext, useTelegramUser } from '@/providers/TelegramProvider';
 import { useState, useEffect } from 'react';
+import { createToaster } from "@codenhub/toaster";
+
+// Initialize toaster outside component (singleton pattern)
+const toaster = createToaster({
+    position: "top-center",
+    duration: 3000,
+});
 
 export default function ProfilePage() {
     // Akses data user dari Telegram Context
@@ -8,6 +15,7 @@ export default function ProfilePage() {
     const { showAlert, haptic, dbUser } = useTelegramContext();
 
     const [payoutAddress, setPayoutAddress] = useState(dbUser?.payout_address || '')
+    const [isSaving, setIsSaving] = useState(false)
 
     // Update payoutAddress ketika dbUser berubah (data dari database sudah load)
     useEffect(() => {
@@ -24,6 +32,71 @@ export default function ProfilePage() {
             showAlert('User ID copied to clipboard!');
         }
     };
+
+    // Handler untuk save address
+    const handleSaveAddress = async () => {
+        // Validasi: address tidak boleh kosong
+        if (!payoutAddress || payoutAddress.trim() === '') {
+            haptic.notification('error');
+            toaster.semantic.error('Please enter a TRON address');
+            return;
+        }
+
+        // Validasi: address harus dimulai dengan 'T'
+        if (!payoutAddress.startsWith('T')) {
+            haptic.notification('error');
+            toaster.semantic.error('TRON address must start with T');
+            return;
+        }
+
+        // Validasi: panjang address TRON = 34 karakter
+        if (payoutAddress.length !== 34) {
+            haptic.notification('error');
+            toaster.semantic.error('TRON address must be exactly 34 characters');
+            return;
+        }
+
+        setIsSaving(true);
+
+        try {
+            // Ambil token dari telegramAuthService
+            const token = localStorage.getItem('telegram_auth_token');
+
+            if (!token) {
+                toaster.semantic.error('Please login again to continue');
+                return;
+            }
+
+            // Kirim request ke API
+            const response = await fetch('/api/telegram/payout-address', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    payout_address: payoutAddress,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                haptic.notification('success');
+                toaster.semantic.success('Your payout address has been updated successfully');
+            } else {
+                haptic.notification('error');
+                toaster.semantic.error(data.message || 'Failed to save address. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error saving payout address:', error);
+            haptic.notification('error');
+            toaster.semantic.error('Unable to connect to server. Please check your connection.');
+        } finally {
+            setIsSaving(false);
+        }
+    }
 
     return (
         <AppLayout>
@@ -217,9 +290,16 @@ export default function ProfilePage() {
                             placeholder="Enter TRON address starting with T..." 
                             value={payoutAddress} 
                             onChange={(e) => setPayoutAddress(e.target.value)}
+                            disabled={isSaving}
                         />
 
-                        <button className="btn-copy">Save</button>
+                        <button 
+                            onClick={handleSaveAddress} 
+                            className="btn-copy"
+                            disabled={isSaving}
+                        >
+                            {isSaving ? 'Saving...' : 'Save'}
+                        </button>
                     </div>
                     <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Payouts are sent automatically to this TRON address upon withdrawal request.</span>
                 </div>

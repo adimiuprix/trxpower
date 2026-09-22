@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import type { ComponentType } from 'react';
 import { TelegramProvider } from './providers/TelegramProvider';
 import { setupTelegramMock } from './utils/telegram-mock';
+import "@codenhub/toaster/styles";
 
 // Siapkan mock environment lebih awal di dev mode agar data langsung tersedia saat initial render
 setupTelegramMock();
