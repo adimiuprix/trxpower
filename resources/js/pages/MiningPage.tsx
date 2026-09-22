@@ -1,6 +1,29 @@
 import AppLayout from '@/layouts/AppLayout';
 
-export default function MiningPage() {
+// Plan type matching backend response
+interface Plan {
+    id: number;
+    name: string;
+    price: string; // Formatted: "10.00"
+    price_raw: number; // Raw: 10
+    daily_profit: string; // Formatted: "2.00"
+    daily_profit_raw: number; // Raw: 2
+    daily_roi_percent: string; // Formatted: "20.00"
+    duration: number;
+    badge: string | null; // "POPULAR", etc
+    image: string; // "/plans/cpu-miner.jpg"
+    total_return: string; // Calculated: "60.00"
+}
+
+interface MiningPageProps {
+    plans: Plan[];
+}
+
+// Color map untuk button berdasarkan index
+const planColors = ['red', 'blue', 'purple', 'orange', 'cyan', 'green'];
+const iconColors = ['#ef4444', '#3b82f6', '#8b5cf6', '#f97316', '#06b6d4', '#10b981'];
+
+export default function MiningPage({ plans = [] }: MiningPageProps) {
     return (
         <AppLayout>
             <section
@@ -9,479 +32,106 @@ export default function MiningPage() {
                 style={{ display: 'flex' }}
             >
                 <div id="plans-list-container" className="mining-plans-grid">
-                    <div className="mining-card-box">
-                        {/* Top section: 3D hardware miner thumbnail + Title & Daily income */}
-                        <div className="mining-card-top">
-                            <div className="mining-thumb-box">
-                                <img
-                                    src="/plans/cpu-miner.jpg"
-                                    alt="TRX Basic"
-                                    className="mining-thumb-img"
-                                    loading="lazy"
-                                />
-                            </div>
-                            <div className="mining-info-col">
-                                <h4 className="mining-plan-title">TRX Basic</h4>
-                                <span className="plan-badge-popular">
-                                    POPULAR
-                                </span>
-                                <span className="mining-daily-label">
-                                    Daily income
-                                </span>
-                                <span className="mining-daily-percent">
-                                    20%
-                                </span>
-                            </div>
-                        </div>
-
-                        {/* Middle metrics row: Per day & Total coin */}
-                        <div className="mining-metrics-pill">
-                            <div className="mining-metric-col">
-                                <svg
-                                    className="metric-lightning-icon"
-                                    width="13"
-                                    height="13"
-                                    viewBox="0 0 24 24"
-                                    fill="#ef4444"
-                                >
-                                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-                                </svg>
-                                <div className="metric-text-stack">
-                                    <span className="metric-label-text">
-                                        Per day
+                    {/* Dynamic Plans from Database */}
+                    {plans.map((plan, index) => (
+                        <div key={plan.id} className="mining-card-box">
+                            {/* Top section: 3D hardware miner thumbnail + Title & Daily income */}
+                            <div className="mining-card-top">
+                                <div className="mining-thumb-box">
+                                    <img
+                                        src={plan.image}
+                                        alt={plan.name}
+                                        className="mining-thumb-img"
+                                        loading="lazy"
+                                    />
+                                </div>
+                                <div className="mining-info-col">
+                                    <h4 className="mining-plan-title">{plan.name}</h4>
+                                    {plan.badge && (
+                                        <span className="plan-badge-popular">
+                                            {plan.badge}
+                                        </span>
+                                    )}
+                                    <span className="mining-daily-label">
+                                        Daily income
                                     </span>
-                                    <span className="metric-val-text">
-                                        +2.00 TRX
+                                    <span className="mining-daily-percent">
+                                        {plan.daily_roi_percent}%
                                     </span>
                                 </div>
                             </div>
 
-                            <div className="mining-metric-col">
+                            {/* Middle metrics row: Per day & Total coin */}
+                            <div className="mining-metrics-pill">
+                                <div className="mining-metric-col">
+                                    <svg
+                                        className="metric-lightning-icon"
+                                        width="13"
+                                        height="13"
+                                        viewBox="0 0 24 24"
+                                        fill={iconColors[index % iconColors.length]}
+                                    >
+                                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                                    </svg>
+                                    <div className="metric-text-stack">
+                                        <span className="metric-label-text">
+                                            Per day
+                                        </span>
+                                        <span className="metric-val-text">
+                                            +{plan.daily_profit} TRX
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className="mining-metric-col">
+                                    <svg
+                                        className="metric-coin-icon"
+                                        width="13"
+                                        height="13"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="#64748b"
+                                        strokeWidth="2"
+                                    >
+                                        <path d="M12 2C6.48 2 2 3.79 2 6s4.48 4 10 4 10-1.79 10-4-4.48-4-10-4z"></path>
+                                        <path d="M2 6v6c0 2.21 4.48 4 10 4s10-1.79 10-4V6"></path>
+                                        <path d="M2 12v6c0 2.21 4.48 4 10 4s10-1.79 10-4v-6"></path>
+                                    </svg>
+                                    <div className="metric-text-stack">
+                                        <span className="metric-label-text">
+                                            Total coin
+                                        </span>
+                                        <span className="metric-val-text">
+                                            {plan.total_return} TRX
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Bottom Action Button: Colorful Activate */}
+                            <button
+                                type="button"
+                                className={`plan-activate-btn plan-btn-${planColors[index % planColors.length]}`}
+                            >
+                                <span>Activate Plan</span>
                                 <svg
-                                    className="metric-coin-icon"
                                     width="13"
                                     height="13"
                                     viewBox="0 0 24 24"
                                     fill="none"
-                                    stroke="#64748b"
-                                    strokeWidth="2"
+                                    stroke="currentColor"
+                                    strokeWidth="2.6"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
                                 >
-                                    <path d="M12 2C6.48 2 2 3.79 2 6s4.48 4 10 4 10-1.79 10-4-4.48-4-10-4z"></path>
-                                    <path d="M2 6v6c0 2.21 4.48 4 10 4s10-1.79 10-4V6"></path>
-                                    <path d="M2 12v6c0 2.21 4.48 4 10 4s10-1.79 10-4v-6"></path>
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                    <polyline points="12 5 19 12 12 19"></polyline>
                                 </svg>
-                                <div className="metric-text-stack">
-                                    <span className="metric-label-text">
-                                        Total coin
-                                    </span>
-                                    <span className="metric-val-text">
-                                        10 TRX
-                                    </span>
-                                </div>
-                            </div>
+                            </button>
                         </div>
+                    ))}
 
-                        {/* Bottom Action Button: Colorful Activate or Green Activated */}
-
-                        <button
-                            type="button"
-                            className="plan-activate-btn plan-btn-red"
-                        >
-                            <span>Activate Plan</span>
-                            <svg
-                                width="13"
-                                height="13"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2.6"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                            >
-                                <line x1="5" y1="12" x2="19" y2="12"></line>
-                                <polyline points="12 5 19 12 12 19"></polyline>
-                            </svg>
-                        </button>
-                    </div>
-
-                    <div className="mining-card-box">
-                        {/* Top section: 3D hardware miner thumbnail + Title & Daily income */}
-                        <div className="mining-card-top">
-                            <div className="mining-thumb-box">
-                                <img
-                                    src="/plans/turbo-gpu.jpg"
-                                    alt="TRX Pro"
-                                    className="mining-thumb-img"
-                                    loading="lazy"
-                                />
-                            </div>
-                            <div className="mining-info-col">
-                                <h4 className="mining-plan-title">TRX Pro</h4>
-
-                                <span className="mining-daily-label">
-                                    Daily income
-                                </span>
-                                <span className="mining-daily-percent">
-                                    22%
-                                </span>
-                            </div>
-                        </div>
-
-                        {/* Middle metrics row: Per day & Total coin */}
-                        <div className="mining-metrics-pill">
-                            <div className="mining-metric-col">
-                                <svg
-                                    className="metric-lightning-icon"
-                                    width="13"
-                                    height="13"
-                                    viewBox="0 0 24 24"
-                                    fill="#3b82f6"
-                                >
-                                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-                                </svg>
-                                <div className="metric-text-stack">
-                                    <span className="metric-label-text">
-                                        Per day
-                                    </span>
-                                    <span className="metric-val-text">
-                                        +5.00 TRX
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div className="mining-metric-col">
-                                <svg
-                                    className="metric-coin-icon"
-                                    width="13"
-                                    height="13"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="#64748b"
-                                    strokeWidth="2"
-                                >
-                                    <path d="M12 2C6.48 2 2 3.79 2 6s4.48 4 10 4 10-1.79 10-4-4.48-4-10-4z"></path>
-                                    <path d="M2 6v6c0 2.21 4.48 4 10 4s10-1.79 10-4V6"></path>
-                                    <path d="M2 12v6c0 2.21 4.48 4 10 4s10-1.79 10-4v-6"></path>
-                                </svg>
-                                <div className="metric-text-stack">
-                                    <span className="metric-label-text">
-                                        Total coin
-                                    </span>
-                                    <span className="metric-val-text">
-                                        20 TRX
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Bottom Action Button: Colorful Activate or Green Activated */}
-
-                        <button
-                            type="button"
-                            className="plan-activate-btn plan-btn-blue"
-                        >
-                            <span>Activate Plan</span>
-                            <svg
-                                width="13"
-                                height="13"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2.6"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                            >
-                                <line x1="5" y1="12" x2="19" y2="12"></line>
-                                <polyline points="12 5 19 12 12 19"></polyline>
-                            </svg>
-                        </button>
-                    </div>
-
-                    <div className="mining-card-box">
-                        {/* Top section: 3D hardware miner thumbnail + Title & Daily income */}
-                        <div className="mining-card-top">
-                            <div className="mining-thumb-box">
-                                <img
-                                    src="/plans/pro-gpu.jpg"
-                                    alt="TRX Advanced"
-                                    className="mining-thumb-img"
-                                    loading="lazy"
-                                />
-                            </div>
-                            <div className="mining-info-col">
-                                <h4 className="mining-plan-title">
-                                    TRX Advanced
-                                </h4>
-
-                                <span className="mining-daily-label">
-                                    Daily income
-                                </span>
-                                <span className="mining-daily-percent">
-                                    25%
-                                </span>
-                            </div>
-                        </div>
-
-                        {/* Middle metrics row: Per day & Total coin */}
-                        <div className="mining-metrics-pill">
-                            <div className="mining-metric-col">
-                                <svg
-                                    className="metric-lightning-icon"
-                                    width="13"
-                                    height="13"
-                                    viewBox="0 0 24 24"
-                                    fill="#8b5cf6"
-                                >
-                                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-                                </svg>
-                                <div className="metric-text-stack">
-                                    <span className="metric-label-text">
-                                        Per day
-                                    </span>
-                                    <span className="metric-val-text">
-                                        +11.00 TRX
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div className="mining-metric-col">
-                                <svg
-                                    className="metric-coin-icon"
-                                    width="13"
-                                    height="13"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="#64748b"
-                                    strokeWidth="2"
-                                >
-                                    <path d="M12 2C6.48 2 2 3.79 2 6s4.48 4 10 4 10-1.79 10-4-4.48-4-10-4z"></path>
-                                    <path d="M2 6v6c0 2.21 4.48 4 10 4s10-1.79 10-4V6"></path>
-                                    <path d="M2 12v6c0 2.21 4.48 4 10 4s10-1.79 10-4v-6"></path>
-                                </svg>
-                                <div className="metric-text-stack">
-                                    <span className="metric-label-text">
-                                        Total coin
-                                    </span>
-                                    <span className="metric-val-text">
-                                        50 TRX
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Bottom Action Button: Colorful Activate or Green Activated */}
-
-                        <button
-                            type="button"
-                            className="plan-activate-btn plan-btn-purple"
-                        >
-                            <span>Activate Plan</span>
-                            <svg
-                                width="13"
-                                height="13"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2.6"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                            >
-                                <line x1="5" y1="12" x2="19" y2="12"></line>
-                                <polyline points="12 5 19 12 12 19"></polyline>
-                            </svg>
-                        </button>
-                    </div>
-
-                    <div className="mining-card-box">
-                        {/* Top section: 3D hardware miner thumbnail + Title & Daily income */}
-                        <div className="mining-card-top">
-                            <div className="mining-thumb-box">
-                                <img
-                                    src="/plans/asic-titan.jpg"
-                                    alt="TRX Premium"
-                                    className="mining-thumb-img"
-                                    loading="lazy"
-                                />
-                            </div>
-                            <div className="mining-info-col">
-                                <h4 className="mining-plan-title">
-                                    TRX Premium
-                                </h4>
-
-                                <span className="mining-daily-label">
-                                    Daily income
-                                </span>
-                                <span className="mining-daily-percent">
-                                    28%
-                                </span>
-                            </div>
-                        </div>
-
-                        {/* Middle metrics row: Per day & Total coin */}
-                        <div className="mining-metrics-pill">
-                            <div className="mining-metric-col">
-                                <svg
-                                    className="metric-lightning-icon"
-                                    width="13"
-                                    height="13"
-                                    viewBox="0 0 24 24"
-                                    fill="#f97316"
-                                >
-                                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-                                </svg>
-                                <div className="metric-text-stack">
-                                    <span className="metric-label-text">
-                                        Per day
-                                    </span>
-                                    <span className="metric-val-text">
-                                        +22.00 TRX
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div className="mining-metric-col">
-                                <svg
-                                    className="metric-coin-icon"
-                                    width="13"
-                                    height="13"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="#64748b"
-                                    strokeWidth="2"
-                                >
-                                    <path d="M12 2C6.48 2 2 3.79 2 6s4.48 4 10 4 10-1.79 10-4-4.48-4-10-4z"></path>
-                                    <path d="M2 6v6c0 2.21 4.48 4 10 4s10-1.79 10-4V6"></path>
-                                    <path d="M2 12v6c0 2.21 4.48 4 10 4s10-1.79 10-4v-6"></path>
-                                </svg>
-                                <div className="metric-text-stack">
-                                    <span className="metric-label-text">
-                                        Total coin
-                                    </span>
-                                    <span className="metric-val-text">
-                                        100 TRX
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Bottom Action Button: Colorful Activate or Green Activated */}
-
-                        <button
-                            type="button"
-                            className="plan-activate-btn plan-btn-orange"
-                        >
-                            <span>Activate Plan</span>
-                            <svg
-                                width="13"
-                                height="13"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2.6"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                            >
-                                <line x1="5" y1="12" x2="19" y2="12"></line>
-                                <polyline points="12 5 19 12 12 19"></polyline>
-                            </svg>
-                        </button>
-                    </div>
-
-                    <div className="mining-card-box">
-                        {/* Top section: 3D hardware miner thumbnail + Title & Daily income */}
-                        <div className="mining-card-top">
-                            <div className="mining-thumb-box">
-                                <img
-                                    src="/plans/quantum-cluster.jpg"
-                                    alt="TRX Master"
-                                    className="mining-thumb-img"
-                                    loading="lazy"
-                                />
-                            </div>
-                            <div className="mining-info-col">
-                                <h4 className="mining-plan-title">
-                                    TRX Master
-                                </h4>
-
-                                <span className="mining-daily-label">
-                                    Daily income
-                                </span>
-                                <span className="mining-daily-percent">
-                                    35%
-                                </span>
-                            </div>
-                        </div>
-
-                        {/* Middle metrics row: Per day & Total coin */}
-                        <div className="mining-metrics-pill">
-                            <div className="mining-metric-col">
-                                <svg
-                                    className="metric-lightning-icon"
-                                    width="13"
-                                    height="13"
-                                    viewBox="0 0 24 24"
-                                    fill="#06b6d4"
-                                >
-                                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-                                </svg>
-                                <div className="metric-text-stack">
-                                    <span className="metric-label-text">
-                                        Per day
-                                    </span>
-                                    <span className="metric-val-text">
-                                        +35.00 TRX
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div className="mining-metric-col">
-                                <svg
-                                    className="metric-coin-icon"
-                                    width="13"
-                                    height="13"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="#64748b"
-                                    strokeWidth="2"
-                                >
-                                    <path d="M12 2C6.48 2 2 3.79 2 6s4.48 4 10 4 10-1.79 10-4-4.48-4-10-4z"></path>
-                                    <path d="M2 6v6c0 2.21 4.48 4 10 4s10-1.79 10-4V6"></path>
-                                    <path d="M2 12v6c0 2.21 4.48 4 10 4s10-1.79 10-4v-6"></path>
-                                </svg>
-                                <div className="metric-text-stack">
-                                    <span className="metric-label-text">
-                                        Total coin
-                                    </span>
-                                    <span className="metric-val-text">
-                                        200 TRX
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Bottom Action Button: Colorful Activate or Green Activated */}
-
-                        <button
-                            type="button"
-                            className="plan-activate-btn plan-btn-cyan"
-                        >
-                            <span>Activate Plan</span>
-                            <svg
-                                width="13"
-                                height="13"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2.6"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                            >
-                                <line x1="5" y1="12" x2="19" y2="12"></line>
-                                <polyline points="12 5 19 12 12 19"></polyline>
-                            </svg>
-                        </button>
-                    </div>
-
+                    {/* Coming Soon Card */}
                     <div className="mining-card-box coming-soon-box">
                         <div className="coming-soon-inner">
                             <div className="coming-soon-icon">
