@@ -1,6 +1,10 @@
 import AppLayout from '@/layouts/AppLayout';
+import { useTelegramContext } from '@/providers/TelegramProvider';
 
 export default function ReferralPage() {
+    const { dbUser } = useTelegramContext();
+    const reffCode = dbUser?.referral_code
+
     return (
         <AppLayout>
             <section
@@ -227,7 +231,7 @@ export default function ReferralPage() {
                                 }}
                                 id="referral-code-badge"
                             >
-                                TRX8092304058
+                                {reffCode}
                             </strong>
                         </span>
                     </div>

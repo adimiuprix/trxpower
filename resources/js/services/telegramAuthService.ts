@@ -16,6 +16,7 @@ export interface AuthResponse {
         photo_url: string | null;
         balance: number;
         wallet_balance: number;
+        referral_code: string;
         is_new_user: boolean;
         token: string;
     };
@@ -36,6 +37,7 @@ export interface UserDataResponse {
         photo_url: string | null;
         balance: number;
         wallet_balance: number;
+        referral_code: string;
         last_active_at: string | null;
     };
     message?: string;

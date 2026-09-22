@@ -18,6 +18,7 @@ export interface DbUser {
     photo_url: string | null;
     balance: number;
     wallet_balance: number;
+    referral_code: string;
     last_active_at?: string | null;
 }
 
@@ -129,7 +130,7 @@ export function TelegramProvider({ children }: TelegramProviderProps) {
                 try {
                     const meResult = await telegramAuthService.me();
                     if (meResult.success && meResult.data) {
-                        setDbUser(meResult.data as DbUser);
+                        setDbUser(meResult.data);
                     }
                 } catch (e) {
                     console.warn('⚠️ Failed to fetch /me data:', e);
@@ -163,7 +164,9 @@ export function TelegramProvider({ children }: TelegramProviderProps) {
 
                     // Simpan data user dari DB (termasuk balance)
                     if (result.data) {
-                        setDbUser(result.data as DbUser);
+                        // Extract only DbUser fields (exclude token & is_new_user)
+                        const { token, is_new_user, ...userData } = result.data;
+                        setDbUser(userData);
                     }
 
                     if (result.data?.is_new_user) {
