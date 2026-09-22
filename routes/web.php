@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\TelegramHomeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -14,7 +15,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 // Inertia Pages
-Route::inertia('/', 'HomePage')->name('home');
+Route::get('/', [TelegramHomeController::class, 'index'])->name('home');
 Route::inertia('/mine', 'MiningPage')->name('mine');
 Route::inertia('/referral', 'ReferralPage')->name('referral');
 Route::inertia('/profile', 'ProfilePage')->name('profile');

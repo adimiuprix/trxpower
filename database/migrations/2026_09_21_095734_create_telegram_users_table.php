@@ -21,6 +21,7 @@ return new class extends Migration
             $table->boolean('is_premium')->default(false);
             $table->string('photo_url')->nullable();
             $table->decimal('balance', 20, 8)->default(0);
+            $table->decimal('wallet_balance', 20, 8)->default(0);
             $table->timestamp('last_active_at')->nullable();
             $table->timestamps();
 

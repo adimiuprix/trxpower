@@ -1,8 +1,32 @@
 import AppLayout from '@/layouts/AppLayout';
-import { useTelegramUser } from '@/providers/TelegramProvider';
+import { useTelegramContext, useTelegramUser } from '@/providers/TelegramProvider';
+import { usePage } from '@inertiajs/react';
+
+interface Transaction {
+    id: number;
+    type: 'deposit' | 'withdraw' | 'mining';
+    amount: string;
+    address: string | null;
+    tx_hash: string | null;
+    status: 'pending' | 'completed' | 'failed';
+    created_at: string;
+}
+
+interface PageProps {
+    transactions: {
+        data: Transaction[];
+    };
+    [key: string]: unknown;
+}
 
 export default function HomePage() {
     const user = useTelegramUser();
+    const { dbUser } = useTelegramContext();
+    const { transactions } = usePage<PageProps>().props;
+
+    // Balance dari database, fallback ke 0 jika belum loaded
+    const balance = dbUser?.balance ?? 0;
+    const walletBalance = dbUser?.wallet_balance ?? 0;
 
     return (
         <AppLayout>
@@ -20,19 +44,10 @@ export default function HomePage() {
                     {/* CARD TOP ROW: GOLD CHIP + NFC + VIP BRANDING */}
                     <div className="card-top-row">
                         <div className="card-user-info-pill">
-                            <div
-                                className="card-user-avatar"
-                                id="card-user-avatar"
-                            >
-                                <img
-                                    src={user?.photoUrl || "https://t.me/i/userpic/320/uYvCe8GaVfT3ZQRpvN-T_qxJYr5vGf-VLLfxlY09fBk0Q6G8Zjoxf-nyppRdq_tg.svg"}
-                                    alt="avatar"
-                                />
+                            <div className="card-user-avatar" id="card-user-avatar">
+                                <img src={user?.photoUrl} alt="avatar" />
                             </div>
-                            <span
-                                className="card-username-text"
-                                id="card-username-display"
-                            >
+                            <span className="card-username-text">
                                 {user?.username ? `@${user.username}` : user?.firstName || 'Guest'}
                             </span>
                         </div>
@@ -77,25 +92,15 @@ export default function HomePage() {
                             </div>
 
                             <div className="balance-amount-row">
-                                <span
-                                    className="balance-number"
-                                    id="home-balance-value"
-                                >
-                                    0.0032
+                                <span className="balance-number">
+                                    {walletBalance.toFixed(4)}
                                 </span>
                                 <span className="balance-symbol">TRX</span>
                             </div>
 
                             <div className="balance-sub-row">
-                                <span
-                                    className="balance-fiat-equiv"
-                                    id="home-fiat-equiv"
-                                >
-                                    ≈ $0.00 USDT
-                                </span>
-                                <span className="card-network-badge">
-                                    {' '}
-                                    <span className="net-dot"></span>TRC-20{' '}
+                                <span className="balance-fiat-equiv">≈ $0.00 USDT</span>
+                                <span className="card-network-badge">{' '} <span className="net-dot"></span>TRC-20{' '}
                                 </span>
                             </div>
                         </div>
@@ -330,7 +335,7 @@ export default function HomePage() {
                                     className="mining-ticking-number"
                                     id="home-live-mined-amount"
                                 >
-                                    0.0016213
+                                    {balance.toFixed(4)}
                                 </span>
                                 <span className="mining-ticking-symbol">
                                     TRX
@@ -516,303 +521,66 @@ export default function HomePage() {
                             <span>Amount &amp; Time</span>
                         </div>
 
-                        {/* Dynamic List of Transactions (Live 2-3s pop-in) */}
-                        <div className="tx-items-list" id="home-live-tx-list">
-                            <div
-                                className="tx-item tx-item-pop-in withdraw"
-                                id="tx-4zkvs2v"
-                            >
-                                <div className="tx-item-left">
-                                    <div className="tx-type-badge withdraw">
-                                        <svg
-                                            width="12"
-                                            height="12"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            strokeWidth="2.6"
-                                        >
-                                            <polyline points="17 14 12 9 7 14"></polyline>
-                                            <line
-                                                x1="12"
-                                                y1="9"
-                                                x2="12"
-                                                y2="21"
-                                            ></line>
-                                        </svg>
-                                        <span>Withdraw</span>
-                                    </div>
-                                    <div className="tx-details-col">
-                                        <span className="tx-address">
-                                            TX8r...pK4e
-                                        </span>
-                                        <div
-                                            className="tx-hash-badge"
-                                            title="Click to copy TronScan TX Hash"
-                                        >
-                                            <svg
-                                                width="10"
-                                                height="10"
-                                                viewBox="0 0 24 24"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                strokeWidth="2.2"
-                                            >
-                                                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-                                                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-                                            </svg>
-                                            <span>TronScan: dc72...dc9f</span>
+                        {/* Dynamic List of Transactions */}
+                        <div className="tx-items-list">
+                            {transactions?.data?.length === 0 && (
+                                <div className="tx-item" style={{ justifyContent: 'center', opacity: 0.5 }}>
+                                    <span>No transactions yet</span>
+                                </div>
+                            )}
+                            {transactions?.data?.map((tx) => (
+                                <div
+                                    key={tx.id}
+                                    className={`tx-item tx-item-pop-in ${tx.type}`}
+                                    id={`tx-${tx.id}`}
+                                >
+                                    <div className="tx-item-left">
+                                        <div className={`tx-type-badge ${tx.type}`}>
+                                            {tx.type === 'withdraw' ? (
+                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6">
+                                                    <polyline points="17 14 12 9 7 14"></polyline>
+                                                    <line x1="12" y1="9" x2="12" y2="21"></line>
+                                                </svg>
+                                            ) : (
+                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6">
+                                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                                </svg>
+                                            )}
+                                            <span style={{ textTransform: 'capitalize' }}>{tx.type}</span>
+                                        </div>
+                                        <div className="tx-details-col">
+                                            <span className="tx-address">
+                                                {tx.address}
+                                            </span>
+                                            {tx.tx_hash && (
+                                                <div
+                                                    className="tx-hash-badge"
+                                                    title={`TronScan TX: ${tx.tx_hash}`}
+                                                    onClick={() => navigator.clipboard?.writeText(tx.tx_hash!)}
+                                                    style={{ cursor: 'pointer' }}
+                                                >
+                                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                                                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                                                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                                                    </svg>
+                                                    <span>
+                                                        TronScan: {tx.tx_hash}
+                                                    </span>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
-                                </div>
-                                <div className="tx-item-right">
-                                    <span className="tx-amount withdraw">
-                                        -49.70 TRX
-                                    </span>
-                                    <span
-                                        className="tx-time-ago"
-                                        data-time="1789796923427"
-                                    >
-                                        Just now
-                                    </span>
-                                </div>
-                            </div>
-                            <div
-                                className="tx-item tx-item-pop-in deposit"
-                                id="tx-talaju6"
-                            >
-                                <div className="tx-item-left">
-                                    <div className="tx-type-badge deposit">
-                                        <svg
-                                            width="12"
-                                            height="12"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            strokeWidth="2.6"
-                                        >
-                                            <polyline points="7 10 12 15 17 10"></polyline>
-                                            <line
-                                                x1="12"
-                                                y1="15"
-                                                x2="12"
-                                                y2="3"
-                                            ></line>
-                                        </svg>
-                                        <span>Deposit</span>
-                                    </div>
-                                    <div className="tx-details-col">
-                                        <span className="tx-address">
-                                            TF9m...pK5j
+                                    <div className="tx-item-right">
+                                        <span className={`tx-amount ${tx.type}`}>
+                                            {tx.type === 'withdraw' ? '-' : '+'}{tx.amount} TRX
                                         </span>
-                                        <div
-                                            className="tx-hash-badge"
-                                            title="Click to copy TronScan TX Hash"
-                                        >
-                                            <svg
-                                                width="10"
-                                                height="10"
-                                                viewBox="0 0 24 24"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                strokeWidth="2.2"
-                                            >
-                                                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-                                                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-                                            </svg>
-                                            <span>TronScan: d52d...ff80</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="tx-item-right">
-                                    <span className="tx-amount deposit">
-                                        +81.10 TRX
-                                    </span>
-                                    <span
-                                        className="tx-time-ago"
-                                        data-time="1789796920276"
-                                    >
-                                        3s ago
-                                    </span>
-                                </div>
-                            </div>
-                            <div
-                                className="tx-item tx-item-pop-in deposit"
-                                id="tx-4sflael"
-                            >
-                                <div className="tx-item-left">
-                                    <div className="tx-type-badge deposit">
-                                        <svg
-                                            width="12"
-                                            height="12"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            strokeWidth="2.6"
-                                        >
-                                            <polyline points="7 10 12 15 17 10"></polyline>
-                                            <line
-                                                x1="12"
-                                                y1="15"
-                                                x2="12"
-                                                y2="3"
-                                            ></line>
-                                        </svg>
-                                        <span>Deposit</span>
-                                    </div>
-                                    <div className="tx-details-col">
-                                        <span className="tx-address">
-                                            TA8x...pW4b
+                                        <span className="tx-time-ago">
+                                            {tx.created_at}
                                         </span>
-                                        <div
-                                            className="tx-hash-badge"
-                                            title="Click to copy TronScan TX Hash"
-                                        >
-                                            <svg
-                                                width="10"
-                                                height="10"
-                                                viewBox="0 0 24 24"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                strokeWidth="2.2"
-                                            >
-                                                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-                                                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-                                            </svg>
-                                            <span>TronScan: 93a6...cfb9</span>
-                                        </div>
                                     </div>
                                 </div>
-                                <div className="tx-item-right">
-                                    <span className="tx-amount deposit">
-                                        +854.50 TRX
-                                    </span>
-                                    <span
-                                        className="tx-time-ago"
-                                        data-time="1789796917592"
-                                    >
-                                        5s ago
-                                    </span>
-                                </div>
-                            </div>
-                            <div
-                                className="tx-item tx-item-pop-in withdraw"
-                                id="tx-lh9llnc"
-                            >
-                                <div className="tx-item-left">
-                                    <div className="tx-type-badge withdraw">
-                                        <svg
-                                            width="12"
-                                            height="12"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            strokeWidth="2.6"
-                                        >
-                                            <polyline points="17 14 12 9 7 14"></polyline>
-                                            <line
-                                                x1="12"
-                                                y1="9"
-                                                x2="12"
-                                                y2="21"
-                                            ></line>
-                                        </svg>
-                                        <span>Withdraw</span>
-                                    </div>
-                                    <div className="tx-details-col">
-                                        <span className="tx-address">
-                                            TF9m...pK5j
-                                        </span>
-                                        <div
-                                            className="tx-hash-badge"
-                                            title="Click to copy TronScan TX Hash"
-                                        >
-                                            <svg
-                                                width="10"
-                                                height="10"
-                                                viewBox="0 0 24 24"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                strokeWidth="2.2"
-                                            >
-                                                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-                                                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-                                            </svg>
-                                            <span>TronScan: 0a90...5204</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="tx-item-right">
-                                    <span className="tx-amount withdraw">
-                                        -528.80 TRX
-                                    </span>
-                                    <span
-                                        className="tx-time-ago"
-                                        data-time="1789796915159"
-                                    >
-                                        8s ago
-                                    </span>
-                                </div>
-                            </div>
-                            <div
-                                className="tx-item tx-item-pop-in deposit"
-                                id="tx-8sps131"
-                            >
-                                <div className="tx-item-left">
-                                    <div className="tx-type-badge deposit">
-                                        <svg
-                                            width="12"
-                                            height="12"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            strokeWidth="2.6"
-                                        >
-                                            <polyline points="7 10 12 15 17 10"></polyline>
-                                            <line
-                                                x1="12"
-                                                y1="15"
-                                                x2="12"
-                                                y2="3"
-                                            ></line>
-                                        </svg>
-                                        <span>Deposit</span>
-                                    </div>
-                                    <div className="tx-details-col">
-                                        <span className="tx-address">
-                                            TM5n...rL8z
-                                        </span>
-                                        <div
-                                            className="tx-hash-badge"
-                                            title="Click to copy TronScan TX Hash"
-                                        >
-                                            <svg
-                                                width="10"
-                                                height="10"
-                                                viewBox="0 0 24 24"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                strokeWidth="2.2"
-                                            >
-                                                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-                                                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-                                            </svg>
-                                            <span>TronScan: c689...c3e1</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="tx-item-right">
-                                    <span className="tx-amount deposit">
-                                        +156.10 TRX
-                                    </span>
-                                    <span
-                                        className="tx-time-ago"
-                                        data-time="1789796912161"
-                                    >
-                                        11s ago
-                                    </span>
-                                </div>
-                            </div>
+                            ))}
                         </div>
                     </div>
                 </div>

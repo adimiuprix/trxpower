@@ -8,6 +8,7 @@ use App\Services\TelegramAuthService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class TelegramAuthController extends Controller
 {
@@ -20,7 +21,7 @@ class TelegramAuthController extends Controller
 
     /**
      * Authenticate Telegram user with initData validation
-     * 
+     *
      * This is the SECURE way to authenticate Telegram users.
      * It validates the initData signature to ensure the request comes from Telegram.
      */
@@ -35,9 +36,9 @@ class TelegramAuthController extends Controller
             $initData = $validated['initData'];
 
             // Validate initData signature from Telegram
-            if (!$this->telegramAuth->validateInitData($initData)) {
+            if (! $this->telegramAuth->validateInitData($initData)) {
                 Log::warning('Telegram authentication failed: Invalid initData signature');
-                
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Invalid Telegram authentication data',
@@ -60,11 +61,11 @@ class TelegramAuthController extends Controller
             // Generate Sanctum token
             $token = $user->createToken('telegram-mini-app')->plainTextToken;
 
-            Log::info('Telegram user authenticated successfully', [
-                'telegram_id' => $user->telegram_id,
-                'username' => $user->username,
-                'is_new' => $user->wasRecentlyCreated,
-            ]);
+            // Log::info('Telegram user authenticated successfully', [
+            //     'telegram_id' => $user->telegram_id,
+            //     'username' => $user->username,
+            //     'is_new' => $user->wasRecentlyCreated,
+            // ]);
 
             return response()->json([
                 'success' => true,
@@ -80,9 +81,11 @@ class TelegramAuthController extends Controller
                     'photo_url' => $user->photo_url,
                     'is_new_user' => $user->wasRecentlyCreated,
                     'token' => $token,
+                    'balance' => (float) $user->balance,
+                    'wallet_balance' => (float) $user->wallet_balance,
                 ],
             ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Validation failed',
@@ -111,7 +114,7 @@ class TelegramAuthController extends Controller
             // Get authenticated user from Sanctum
             $user = $request->user('sanctum');
 
-            if (!$user) {
+            if (! $user) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Unauthenticated',
@@ -132,6 +135,8 @@ class TelegramAuthController extends Controller
                     'language_code' => $user->language_code,
                     'is_premium' => $user->is_premium,
                     'photo_url' => $user->photo_url,
+                    'balance' => (float) $user->balance,
+                    'wallet_balance' => (float) $user->wallet_balance,
                     'last_active_at' => $user->last_active_at,
                 ],
             ]);

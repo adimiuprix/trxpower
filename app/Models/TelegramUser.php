@@ -25,6 +25,7 @@ class TelegramUser extends Model
         'photo_url',
         'last_active_at',
         'balance',
+        'wallet_balance',
     ];
 
     /**
@@ -37,6 +38,7 @@ class TelegramUser extends Model
         'is_premium' => 'boolean',
         'last_active_at' => 'datetime',
         'balance' => 'decimal:8',
+        'wallet_balance' => 'decimal:8',
     ];
 
     /**
@@ -52,19 +54,35 @@ class TelegramUser extends Model
      */
     public static function createOrUpdateFromTelegram(array $userData): self
     {
-        return static::updateOrCreate(
-            ['telegram_id' => $userData['id']],
-            [
-                'first_name' => $userData['firstName'],
-                'last_name' => $userData['lastName'] ?? null,
-                'username' => $userData['username'] ?? null,
+        $existing = static::where('telegram_id', $userData['id'])->first();
+
+        if ($existing) {
+            // Update hanya profil, JANGAN overwrite balance
+            $existing->update([
+                'first_name'    => $userData['firstName'],
+                'last_name'     => $userData['lastName'] ?? null,
+                'username'      => $userData['username'] ?? null,
                 'language_code' => $userData['languageCode'] ?? null,
-                'is_premium' => $userData['isPremium'] ?? false,
-                'photo_url' => $userData['photoUrl'] ?? null,
+                'is_premium'    => $userData['isPremium'] ?? false,
+                'photo_url'     => $userData['photoUrl'] ?? null,
                 'last_active_at' => now(),
-                'balance' => 0,
-            ]
-        );
+            ]);
+            return $existing;
+        }
+
+        // User baru: buat dengan balance awal 0
+        return static::create([
+            'telegram_id'    => $userData['id'],
+            'first_name'     => $userData['firstName'],
+            'last_name'      => $userData['lastName'] ?? null,
+            'username'       => $userData['username'] ?? null,
+            'language_code'  => $userData['languageCode'] ?? null,
+            'is_premium'     => $userData['isPremium'] ?? false,
+            'photo_url'      => $userData['photoUrl'] ?? null,
+            'last_active_at' => now(),
+            'balance'        => 0,
+            'wallet_balance' => 0,
+        ]);
     }
 
     /**

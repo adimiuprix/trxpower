@@ -4,7 +4,22 @@ import { setupTelegramMock } from '@/utils/telegram-mock';
 import { useTelegram } from '@/hooks/useTelegram';
 import type { TelegramUser } from '@/hooks/useTelegram';
 import type { TelegramWebAppThemeParams } from '@/types/telegram';
-import { telegramAuthService } from '@/services/telegramAuthService';
+import { telegramAuthService, type AuthResponse } from '@/services/telegramAuthService';
+
+// Data user dari database (includes balance, wallet, etc.)
+export interface DbUser {
+    id: number;
+    telegram_id: number;
+    first_name: string;
+    last_name: string | null;
+    username: string | null;
+    language_code: string | null;
+    is_premium: boolean;
+    photo_url: string | null;
+    balance: number;
+    wallet_balance: number;
+    last_active_at?: string | null;
+}
 
 interface TelegramProviderProps {
     children: ReactNode;
@@ -13,6 +28,7 @@ interface TelegramProviderProps {
 // Context untuk menyimpan Telegram data
 interface TelegramContextValue {
     user: TelegramUser | undefined;
+    dbUser: DbUser | null; // Data user dari database (termasuk balance)
     initData: string;
     initDataRaw: string;
     startParam: string | undefined;
@@ -56,6 +72,7 @@ export function TelegramProvider({ children }: TelegramProviderProps) {
     const [isInitialized, setIsInitialized] = useState(false);
     const [isAuthenticating, setIsAuthenticating] = useState(false);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [dbUser, setDbUser] = useState<DbUser | null>(null);
 
     useEffect(() => {
         try {
@@ -104,10 +121,19 @@ export function TelegramProvider({ children }: TelegramProviderProps) {
                 return;
             }
 
-            // Skip jika sudah ada token di localStorage
+            // Skip jika sudah ada token di localStorage - langsung fetch /me
             if (telegramAuthService.isAuthenticated()) {
                 setIsAuthenticated(true);
                 console.log('✅ User already authenticated (token found)');
+                // Fetch user data from DB to get balance
+                try {
+                    const meResult = await telegramAuthService.me();
+                    if (meResult.success && meResult.data) {
+                        setDbUser(meResult.data as DbUser);
+                    }
+                } catch (e) {
+                    console.warn('⚠️ Failed to fetch /me data:', e);
+                }
                 return;
             }
 
@@ -128,13 +154,18 @@ export function TelegramProvider({ children }: TelegramProviderProps) {
                 }
 
                 // Authenticate with initData (secure)
-                const result = await telegramAuthService.authenticate({
+                const result: AuthResponse = await telegramAuthService.authenticate({
                     initData,
                 });
 
                 if (result.success) {
                     setIsAuthenticated(true);
-                    
+
+                    // Simpan data user dari DB (termasuk balance)
+                    if (result.data) {
+                        setDbUser(result.data as DbUser);
+                    }
+
                     if (result.data?.is_new_user) {
                         console.log('🎉 New user created in database!');
                         telegram.haptic.notification('success');
@@ -158,6 +189,7 @@ export function TelegramProvider({ children }: TelegramProviderProps) {
         <TelegramContext.Provider 
             value={{
                 ...telegram,
+                dbUser,
                 isAuthenticating,
                 isAuthenticated,
             }}

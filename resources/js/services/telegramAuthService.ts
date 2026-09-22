@@ -14,6 +14,8 @@ export interface AuthResponse {
         language_code: string | null;
         is_premium: boolean;
         photo_url: string | null;
+        balance: number;
+        wallet_balance: number;
         is_new_user: boolean;
         token: string;
     };
@@ -32,6 +34,8 @@ export interface UserDataResponse {
         language_code: string | null;
         is_premium: boolean;
         photo_url: string | null;
+        balance: number;
+        wallet_balance: number;
         last_active_at: string | null;
     };
     message?: string;

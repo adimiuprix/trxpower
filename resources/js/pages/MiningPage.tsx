@@ -14,7 +14,7 @@ export default function MiningPage() {
                         <div className="mining-card-top">
                             <div className="mining-thumb-box">
                                 <img
-                                    src="/images/plans/cpu-miner.jpg"
+                                    src="/plans/cpu-miner.jpg"
                                     alt="TRX Basic"
                                     className="mining-thumb-img"
                                     loading="lazy"
@@ -109,7 +109,7 @@ export default function MiningPage() {
                         <div className="mining-card-top">
                             <div className="mining-thumb-box">
                                 <img
-                                    src="/images/plans/turbo-gpu.jpg"
+                                    src="/plans/turbo-gpu.jpg"
                                     alt="TRX Pro"
                                     className="mining-thumb-img"
                                     loading="lazy"
@@ -202,7 +202,7 @@ export default function MiningPage() {
                         <div className="mining-card-top">
                             <div className="mining-thumb-box">
                                 <img
-                                    src="/images/plans/pro-gpu.jpg"
+                                    src="/plans/pro-gpu.jpg"
                                     alt="TRX Advanced"
                                     className="mining-thumb-img"
                                     loading="lazy"
@@ -297,7 +297,7 @@ export default function MiningPage() {
                         <div className="mining-card-top">
                             <div className="mining-thumb-box">
                                 <img
-                                    src="/images/plans/asic-titan.jpg"
+                                    src="/plans/asic-titan.jpg"
                                     alt="TRX Premium"
                                     className="mining-thumb-img"
                                     loading="lazy"
@@ -392,7 +392,7 @@ export default function MiningPage() {
                         <div className="mining-card-top">
                             <div className="mining-thumb-box">
                                 <img
-                                    src="/images/plans/quantum-cluster.jpg"
+                                    src="/plans/quantum-cluster.jpg"
                                     alt="TRX Master"
                                     className="mining-thumb-img"
                                     loading="lazy"
