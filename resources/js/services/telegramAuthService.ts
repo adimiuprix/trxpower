@@ -14,6 +14,7 @@ export interface DbUser {
     balance: number; 
     wallet_balance: number; 
     referral_code: string; 
+    payout_address: string
 }
 
 export interface AuthResponse {

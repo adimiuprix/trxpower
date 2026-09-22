@@ -97,6 +97,7 @@ class TelegramAuthController extends Controller
         try {
             // Get authenticated user from Sanctum
             $user = $request->user('sanctum');
+            // Log::info($user);
 
             if (! $user) {
                 return response()->json([
@@ -122,6 +123,7 @@ class TelegramAuthController extends Controller
                     'balance' => (float) $user->balance,
                     'wallet_balance' => (float) $user->wallet_balance,
                     'referral_code' => $user->referral_code,
+                    'payout_address' => $user->payout_address,
                     'last_active_at' => $user->last_active_at,
                 ],
             ]);

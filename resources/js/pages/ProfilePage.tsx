@@ -1,10 +1,20 @@
 import AppLayout from '@/layouts/AppLayout';
 import { useTelegramContext, useTelegramUser } from '@/providers/TelegramProvider';
+import { useState, useEffect } from 'react';
 
 export default function ProfilePage() {
     // Akses data user dari Telegram Context
     const user = useTelegramUser();
-    const { isDark, showAlert, haptic } = useTelegramContext();
+    const { showAlert, haptic, dbUser } = useTelegramContext();
+
+    const [payoutAddress, setPayoutAddress] = useState(dbUser?.payout_address || '')
+
+    // Update payoutAddress ketika dbUser berubah (data dari database sudah load)
+    useEffect(() => {
+        if (dbUser?.payout_address) {
+            setPayoutAddress(dbUser.payout_address);
+        }
+    }, [dbUser?.payout_address])
 
     // Handler untuk copy user ID
     const handleCopyUserId = () => {
@@ -23,7 +33,7 @@ export default function ProfilePage() {
                     <div className="profile-avatar-wrap">
                         <div className="profile-avatar-circle" id="profile-avatar-container">
                             <img
-                                src={user?.photoUrl || "https://t.me/i/userpic/320/uYvCe8GaVfT3ZQRpvN-T_qxJYr5vGf-VLLfxlY09fBk0Q6G8Zjoxf-nyppRdq_tg.svg"}
+                                src={user?.photoUrl}
                                 alt="User Avatar"
                                 className="profile-avatar-img"
                             />
@@ -68,12 +78,9 @@ export default function ProfilePage() {
                                     <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                                     <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                                 </svg>
-                                <span
-                                    >UID:
-                                    <strong id="profile-user-id" style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-main)' }}
-                                        >{user?.id || 'N/A'}</strong
-                                    ></span
-                                >
+                                <span>UID:
+                                    <strong id="profile-user-id" style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-main)' }}>{user?.id || 'N/A'}</strong>
+                                </span>
                             </div>
                             <span className="profile-tier-badge" id="profile-vip-badge">
                                 {user?.isPremium ? 'Premium User' : 'Verified Miner'}
@@ -126,9 +133,7 @@ export default function ProfilePage() {
                                     <circle cx="18" cy="12" r="2"></circle>
                                 </svg>
                             </div>
-                            <span className="profile-stat-tag" style={{ color: 'var(--trx-red)', background: 'rgba(225, 29, 72, 0.1)' }}
-                                >Claimed</span
-                            >
+                            <span className="profile-stat-tag" style={{ color: 'var(--trx-red)', background: 'rgba(225, 29, 72, 0.1)' }}>Claimed</span>
                         </div>
                         <div>
                             <span className="profile-stat-label">Withdrawable Balance</span>
@@ -206,16 +211,19 @@ export default function ProfilePage() {
                             Not Bound</span>
                     </div>
                     <div className="copy-input-row">
-                        <input
-                            type="text"
-                            id="profile-wallet-address-input"
-                            placeholder="Enter TRON address starting with T..."
-                            value="TLsV52sRDL79HXGGm9yzwKibb6BeruhUzy"
+                        
+                        <input 
+                            type="text" 
+                            placeholder="Enter TRON address starting with T..." 
+                            value={payoutAddress} 
+                            onChange={(e) => setPayoutAddress(e.target.value)}
                         />
+
                         <button className="btn-copy">Save</button>
                     </div>
                     <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Payouts are sent automatically to this TRON address upon withdrawal request.</span>
                 </div>
+
                 {/* 4. Transaction Ledger History Section */}
                 <div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>

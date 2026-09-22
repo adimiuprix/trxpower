@@ -29,6 +29,7 @@ class TelegramUser extends Model
         'last_active_at',
         'balance',
         'wallet_balance',
+        'payout_address',
     ];
 
     /**
