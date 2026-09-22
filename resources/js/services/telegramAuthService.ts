@@ -2,42 +2,34 @@ export interface TelegramAuthData {
     initData: string; // Raw initData from Telegram WebApp
 }
 
+export interface DbUser { 
+    id: number; 
+    telegram_id: number; 
+    first_name: string; 
+    last_name: string | null; 
+    username: string | null; 
+    language_code: string | null; 
+    is_premium: boolean; 
+    photo_url: string | null; 
+    balance: number; 
+    wallet_balance: number; 
+    referral_code: string; 
+}
+
 export interface AuthResponse {
     success: boolean;
     message: string;
-    data?: {
-        id: number;
-        telegram_id: number;
-        first_name: string;
-        last_name: string | null;
-        username: string | null;
-        language_code: string | null;
-        is_premium: boolean;
-        photo_url: string | null;
-        balance: number;
-        wallet_balance: number;
-        referral_code: string;
-        is_new_user: boolean;
-        token: string;
-    };
+    data?: DbUser & {
+            is_new_user: boolean;
+            token: string;
+        };
     errors?: Record<string, string[]>;
     error?: string;
 }
 
-export interface UserDataResponse {
+export interface UserResponse {
     success: boolean;
-    data?: {
-        id: number;
-        telegram_id: number;
-        first_name: string;
-        last_name: string | null;
-        username: string | null;
-        language_code: string | null;
-        is_premium: boolean;
-        photo_url: string | null;
-        balance: number;
-        wallet_balance: number;
-        referral_code: string;
+    data?: DbUser & {
         last_active_at: string | null;
     };
     message?: string;
@@ -95,12 +87,12 @@ class TelegramAuthService {
     /**
      * Authenticate user dengan Telegram data
      */
-    async authenticate(userData: TelegramAuthData): Promise<AuthResponse> {
+    async authenticate(DbUser: TelegramAuthData): Promise<AuthResponse> {
         try {
             const response = await fetch(`${this.getBaseURL()}/auth`, {
                 method: 'POST',
                 headers: this.getHeaders(),
-                body: JSON.stringify(userData),
+                body: JSON.stringify(DbUser),
             });
 
             const data = await this.handleResponse<AuthResponse>(response);
@@ -131,7 +123,7 @@ class TelegramAuthService {
     /**
      * Get current authenticated user data
      */
-    async me(): Promise<UserDataResponse> {
+    async me(): Promise<UserResponse> {
         try {
             if (!this.token) {
                 return {
@@ -145,7 +137,7 @@ class TelegramAuthService {
                 headers: this.getHeaders(),
             });
 
-            const data = await this.handleResponse<UserDataResponse>(response);
+            const data = await this.handleResponse<UserResponse>(response);
 
             // If 401, clear token
             if (!response.ok && response.status === 401) {

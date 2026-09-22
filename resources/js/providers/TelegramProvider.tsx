@@ -4,21 +4,10 @@ import { setupTelegramMock } from '@/utils/telegram-mock';
 import { useTelegram } from '@/hooks/useTelegram';
 import type { TelegramUser } from '@/hooks/useTelegram';
 import type { TelegramWebAppThemeParams } from '@/types/telegram';
-import { telegramAuthService, type AuthResponse } from '@/services/telegramAuthService';
+import { telegramAuthService, type AuthResponse, type DbUser } from '@/services/telegramAuthService';
 
 // Data user dari database (includes balance, wallet, etc.)
-export interface DbUser {
-    id: number;
-    telegram_id: number;
-    first_name: string;
-    last_name: string | null;
-    username: string | null;
-    language_code: string | null;
-    is_premium: boolean;
-    photo_url: string | null;
-    balance: number;
-    wallet_balance: number;
-    referral_code: string;
+export interface UserResponse extends DbUser {
     last_active_at?: string | null;
 }
 
@@ -29,7 +18,7 @@ interface TelegramProviderProps {
 // Context untuk menyimpan Telegram data
 interface TelegramContextValue {
     user: TelegramUser | undefined;
-    dbUser: DbUser | null; // Data user dari database (termasuk balance)
+    dbUser: UserResponse | null; // Data user dari database (termasuk balance)
     initData: string;
     initDataRaw: string;
     startParam: string | undefined;
@@ -73,7 +62,7 @@ export function TelegramProvider({ children }: TelegramProviderProps) {
     const [isInitialized, setIsInitialized] = useState(false);
     const [isAuthenticating, setIsAuthenticating] = useState(false);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [dbUser, setDbUser] = useState<DbUser | null>(null);
+    const [dbUser, setDbUser] = useState<UserResponse | null>(null);
 
     useEffect(() => {
         try {
