@@ -27,6 +27,139 @@ export default function ProfilePage({ finance }: ProfilePageProps) {
 
     const [payoutAddress, setPayoutAddress] = useState(dbUser?.payout_address || '')
     const [isSaving, setIsSaving] = useState(false)
+    const [activeTab, setActiveTab] = useState<'all' | 'deposits' | 'withdrawals' | 'mining'>('all')
+
+    // Data transaksi (nanti bisa diganti dengan fetch dari API)
+    const allTransactions = [
+        {
+            id: 1,
+            type: 'mining',
+            title: 'Claimed mining yield (0.178022 TRX) from free plan & active rigs',
+            amount: 0.1780,
+            balanceAfter: 0.1875,
+            date: '21 Sept 2026',
+            time: '08:38',
+            isPositive: true,
+        },
+        {
+            id: 2,
+            type: 'mining',
+            title: 'Claimed mining yield (0.000011 TRX) from free plan & active rigs',
+            amount: 0.0000,
+            balanceAfter: 0.0095,
+            date: '19 Sept 2026',
+            time: '13:55',
+            isPositive: true,
+        },
+        {
+            id: 3,
+            type: 'deposits',
+            title: 'Deposit to mining balance via TRC20 transfer',
+            amount: 50.00,
+            balanceAfter: 50.00,
+            date: '18 Sept 2026',
+            time: '10:22',
+            isPositive: true,
+        },
+        {
+            id: 4,
+            type: 'deposits',
+            title: 'Withdrawal request to TRON wallet',
+            amount: 10.50,
+            balanceAfter: 39.50,
+            date: '17 Sept 2026',
+            time: '15:30',
+            isPositive: false,
+        },
+        {
+            id: 5,
+            type: 'deposits',
+            title: 'Deposit to mining balance via TRC20 transfer',
+            amount: 25.00,
+            balanceAfter: 75.00,
+            date: '16 Sept 2026',
+            time: '09:15',
+            isPositive: true,
+        },
+        {
+            id: 6,
+            type: 'mining',
+            title: 'Claimed mining yield (0.095522 TRX) from free plan & active rigs',
+            amount: 0.0955,
+            balanceAfter: 0.1050,
+            date: '15 Sept 2026',
+            time: '14:20',
+            isPositive: true,
+        },
+    ];
+
+    // Filter transaksi berdasarkan tab yang aktif
+    const filteredTransactions = activeTab === 'all' 
+        ? allTransactions 
+        : allTransactions.filter(tx => tx.type === activeTab);
+
+    // Handler untuk ganti tab dengan haptic feedback
+    const handleTabChange = (tab: 'all' | 'deposits' | 'withdrawals' | 'mining') => {
+        setActiveTab(tab);
+        haptic.selection(); // Haptic feedback saat tab berganti
+    };
+
+    // Function untuk render icon berdasarkan tipe transaksi
+    const renderTransactionIcon = (type: string) => {
+        switch (type) {
+            case 'mining':
+                return (
+                    <div className="tx-card-icon tx-mining">
+                        <svg
+                            width="17"
+                            height="17"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2.2"
+                        >
+                            <path d="M14.5 2.5L21.5 9.5L19 12L12 5L14.5 2.5Z"></path>
+                            <path d="M13 6L3 16L5 21L10 19L20 9"></path>
+                            <circle cx="12" cy="12" r="1"></circle>
+                        </svg>
+                    </div>
+                );
+            case 'deposits':
+                return (
+                    <div className="tx-card-icon tx-deposit">
+                        <svg
+                            width="18"
+                            height="18"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2.5"
+                        >
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <polyline points="19 12 12 19 5 12"></polyline>
+                        </svg>
+                    </div>
+                );
+            case 'withdrawals':
+                return (
+                    <div className="tx-card-icon tx-withdraw">
+                        <svg
+                            width="18"
+                            height="18"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2.5"
+                        >
+                            <line x1="12" y1="19" x2="12" y2="5"></line>
+                            <polyline points="5 12 12 5 19 12"></polyline>
+                        </svg>
+                    </div>
+                );
+            default:
+                return null;
+        }
+    };
 
     // Update payoutAddress ketika dbUser berubah (data dari database sudah load)
     useEffect(() => {
@@ -339,7 +472,7 @@ export default function ProfilePage({ finance }: ProfilePageProps) {
                                     padding: '1px 7px',
                                     borderRadius: '999px',
                                 }}
-                                >6
+                                >{filteredTransactions.length}
                             </span>
                         </h4>
                         <button
@@ -365,209 +498,106 @@ export default function ProfilePage({ finance }: ProfilePageProps) {
                         </button>
                     </div>
 
-                    {/* Category Filter Chips */}
+                    {/* Category Filter */}
                     <div className="history-filter-bar">
                         <button
                             type="button"
-                            className="history-filter-chip active"
-                            data-filter="all"
+                            className={`history-filter-chip ${activeTab === 'all' ? 'active' : ''}`}
+                            onClick={() => handleTabChange('all')}
                         >
                             All
                         </button>
                         <button
                             type="button"
-                            className="history-filter-chip"
-                            data-filter="deposits"
+                            className={`history-filter-chip ${activeTab === 'deposits' ? 'active' : ''}`}
+                            onClick={() => handleTabChange('deposits')}
                         >
                             Deposits
                         </button>
                         <button
                             type="button"
-                            className="history-filter-chip"
-                            data-filter="withdrawals"
+                            className={`history-filter-chip ${activeTab === 'withdrawals' ? 'active' : ''}`}
+                            onClick={() => handleTabChange('withdrawals')}
                         >
                             Withdrawals
                         </button>
                         <button
                             type="button"
-                            className="history-filter-chip"
-                            data-filter="mining"
+                            className={`history-filter-chip ${activeTab === 'mining' ? 'active' : ''}`}
+                            onClick={() => handleTabChange('mining')}
                         >
                             Mining Yield
                         </button>
                     </div>
 
                     {/* Transactions List */}
-                    <div id="profile-tx-history-list" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        <div className="tx-item-card">
-                            <div className="tx-card-left">
-                                <div className="tx-card-icon tx-mining">
-                                    <svg
-                                        width="17"
-                                        height="17"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="2.2"
-                                    >
-                                        <path d="M14.5 2.5L21.5 9.5L19 12L12 5L14.5 2.5Z"></path>
-                                        <path d="M13 6L3 16L5 21L10 19L20 9"></path>
-                                        <circle cx="12" cy="12" r="1"></circle>
-                                    </svg>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {filteredTransactions.length > 0 ? (
+                            filteredTransactions.map((tx) => (
+                                <div key={tx.id} className="tx-item-card">
+                                    <div className="tx-card-left">
+                                        {renderTransactionIcon(tx.type)}
+                                        <div className="tx-card-details">
+                                            <span className="tx-card-title">{tx.title}</span>
+                                            <span className="tx-card-meta">{tx.date} • {tx.time}</span>
+                                        </div>
+                                    </div>
+                                    <div className="tx-card-right">
+                                        <span className={`tx-card-amount ${tx.isPositive ? 'tx-positive' : 'tx-negative'}`}>
+                                            {tx.isPositive ? '+' : '-'}{tx.amount.toFixed(4)} TRX
+                                        </span>
+                                        <span className="tx-card-balance-after">Bal: {tx.balanceAfter.toFixed(4)}</span>
+                                    </div>
                                 </div>
-                                <div className="tx-card-details">
-                                    <span className="tx-card-title">Claimed mining yield (0.178022 TRX) from free plan &amp; active rigs</span>
-                                    <span className="tx-card-meta">21 Sept 2026 • 08:38</span>
-                                </div>
-                            </div>
-                            <div className="tx-card-right">
-                                <span className="tx-card-amount tx-positive">+0.1780 TRX</span>
-                                <span className="tx-card-balance-after">Bal: 0.1875</span>
-                            </div>
-                        </div>
+                            ))
+                        ) : (
+                            <div
+                                style={{
+                                    textAlign: 'center',
+                                    padding: '32px 14px',
+                                    background: 'var(--bg-card)',
+                                    border: '1px dashed var(--border-card)',
+                                    borderRadius: '14px',
+                                }}
+                            >
+                                <svg
+                                    width="28"
+                                    height="28"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="var(--text-muted)"
+                                    strokeWidth="1.8"
+                                    style={{
+                                        marginBottom: '8px',
+                                        opacity: 0.6,
+                                    }}
+                                >
+                                    <circle cx="12" cy="12" r="10" />
+                                    <line x1="12" y1="8" x2="12" y2="12" />
+                                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                                </svg>
 
-                        <div className="tx-item-card">
-                            <div className="tx-card-left">
-                                <div className="tx-card-icon tx-mining">
-                                    <svg
-                                        width="17"
-                                        height="17"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="2.2"
-                                    >
-                                        <path d="M14.5 2.5L21.5 9.5L19 12L12 5L14.5 2.5Z"></path>
-                                        <path d="M13 6L3 16L5 21L10 19L20 9"></path>
-                                        <circle cx="12" cy="12" r="1"></circle>
-                                    </svg>
+                                <div
+                                    style={{
+                                        fontSize: '13px',
+                                        fontWeight: 700,
+                                        color: 'var(--text-main)',
+                                        marginBottom: '2px',
+                                    }}
+                                >
+                                    No Transactions Found
                                 </div>
-                                <div className="tx-card-details">
-                                    <span className="tx-card-title">Claimed mining yield (0.000011 TRX) from free plan &amp; active rigs</span>
-                                    <span className="tx-card-meta">19 Sept 2026 • 13:55</span>
-                                </div>
-                            </div>
-                            <div className="tx-card-right">
-                                <span className="tx-card-amount tx-positive">+0.0000 TRX</span>
-                                <span className="tx-card-balance-after">Bal: 0.0095</span>
-                            </div>
-                        </div>
 
-                        <div className="tx-item-card">
-                            <div className="tx-card-left">
-                                <div className="tx-card-icon tx-mining">
-                                    <svg
-                                        width="17"
-                                        height="17"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="2.2"
-                                    >
-                                        <path d="M14.5 2.5L21.5 9.5L19 12L12 5L14.5 2.5Z"></path>
-                                        <path d="M13 6L3 16L5 21L10 19L20 9"></path>
-                                        <circle cx="12" cy="12" r="1"></circle>
-                                    </svg>
-                                </div>
-                                <div className="tx-card-details">
-                                    <span className="tx-card-title"
-                                        >Claimed mining yield (0.000021 TRX) from free plan &amp; active rigs</span
-                                    >
-                                    <span className="tx-card-meta">19 Sept 2026 • 13:54</span>
+                                <div
+                                    style={{
+                                        fontSize: '11px',
+                                        color: 'var(--text-muted)',
+                                    }}
+                                >
+                                    No records match this filter.
                                 </div>
                             </div>
-                            <div className="tx-card-right">
-                                <span className="tx-card-amount tx-positive">+0.0000 TRX</span>
-                                <span className="tx-card-balance-after">Bal: 0.0095</span>
-                            </div>
-                        </div>
-
-                        <div className="tx-item-card">
-                            <div className="tx-card-left">
-                                <div className="tx-card-icon tx-mining">
-                                    <svg
-                                        width="17"
-                                        height="17"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="2.2"
-                                    >
-                                        <path d="M14.5 2.5L21.5 9.5L19 12L12 5L14.5 2.5Z"></path>
-                                        <path d="M13 6L3 16L5 21L10 19L20 9"></path>
-                                        <circle cx="12" cy="12" r="1"></circle>
-                                    </svg>
-                                </div>
-                                <div className="tx-card-details">
-                                    <span className="tx-card-title"
-                                        >Claimed mining yield (0.006197 TRX) from free plan &amp; active rigs</span
-                                    >
-                                    <span className="tx-card-meta">19 Sept 2026 • 13:54</span>
-                                </div>
-                            </div>
-                            <div className="tx-card-right">
-                                <span className="tx-card-amount tx-positive">+0.0062 TRX</span>
-                                <span className="tx-card-balance-after">Bal: 0.0094</span>
-                            </div>
-                        </div>
-
-                        <div className="tx-item-card">
-                            <div className="tx-card-left">
-                                <div className="tx-card-icon tx-mining">
-                                    <svg
-                                        width="17"
-                                        height="17"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="2.2"
-                                    >
-                                        <path d="M14.5 2.5L21.5 9.5L19 12L12 5L14.5 2.5Z"></path>
-                                        <path d="M13 6L3 16L5 21L10 19L20 9"></path>
-                                        <circle cx="12" cy="12" r="1"></circle>
-                                    </svg>
-                                </div>
-                                <div className="tx-card-details">
-                                    <span className="tx-card-title"
-                                        >Claimed mining yield (0.001386 TRX) from free plan &amp; active rigs</span
-                                    >
-                                    <span className="tx-card-meta">19 Sept 2026 • 12:25</span>
-                                </div>
-                            </div>
-                            <div className="tx-card-right">
-                                <span className="tx-card-amount tx-positive">+0.0014 TRX</span>
-                                <span className="tx-card-balance-after">Bal: 0.0032</span>
-                            </div>
-                        </div>
-
-                        <div className="tx-item-card">
-                            <div className="tx-card-left">
-                                <div className="tx-card-icon tx-mining">
-                                    <svg
-                                        width="17"
-                                        height="17"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="2.2"
-                                    >
-                                        <path d="M14.5 2.5L21.5 9.5L19 12L12 5L14.5 2.5Z"></path>
-                                        <path d="M13 6L3 16L5 21L10 19L20 9"></path>
-                                        <circle cx="12" cy="12" r="1"></circle>
-                                    </svg>
-                                </div>
-                                <div className="tx-card-details">
-                                    <span className="tx-card-title"
-                                        >Claimed mining yield (0.001846 TRX) from free plan &amp; active rigs</span
-                                    >
-                                    <span className="tx-card-meta">19 Sept 2026 • 12:05</span>
-                                </div>
-                            </div>
-                            <div className="tx-card-right">
-                                <span className="tx-card-amount tx-positive">+0.0018 TRX</span>
-                                <span className="tx-card-balance-after">Bal: 0.0018</span>
-                            </div>
-                        </div>
+                        )}
                     </div>
                 </div>
             </section>
