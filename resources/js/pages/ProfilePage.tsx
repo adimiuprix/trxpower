@@ -9,18 +9,7 @@ const toaster = createToaster({
     duration: 3000,
 });
 
-interface financeOverView {
-    deposit: number;
-    withdrawable: number;
-    withdrawn: number;
-    mined: number;
-}
-
-interface ProfilePageProps {
-    finance: financeOverView;
-}
-
-export default function ProfilePage({ finance }: ProfilePageProps) {
+export default function ProfilePage() {
     // Akses data user dari Telegram Context
     const user = useTelegramUser();
     const { showAlert, haptic, dbUser } = useTelegramContext();
@@ -327,7 +316,7 @@ export default function ProfilePage({ finance }: ProfilePageProps) {
                         <div>
                             <span className="profile-stat-label">Deposit Balance</span>
 
-                            <div className="profile-stat-val" id="profile-deposited">{finance.deposit} TRX</div>
+                            <div className="profile-stat-val" id="profile-deposited">0.00 TRX</div>
                             <span className="profile-stat-sub">For mining activation</span>
                         </div>
                     </div>
