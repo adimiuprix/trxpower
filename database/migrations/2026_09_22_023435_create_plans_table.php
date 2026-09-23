@@ -22,6 +22,7 @@ return new class extends Migration
             $table->string('hashrate');
             $table->string('badge_text')->nullable();
             $table->string('image_url')->nullable();
+            $table->boolean('is_free');
             $table->timestamps();
         });
     }

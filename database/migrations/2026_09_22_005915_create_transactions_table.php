@@ -21,6 +21,7 @@ return new class extends Migration
             $table->enum('status', ['pending', 'completed', 'failed'])->default('pending');
             $table->timestamp('completed_at')->nullable();
             $table->timestamps();
+            
             $table->index(['telegram_user_id', 'created_at']);
         });
     }

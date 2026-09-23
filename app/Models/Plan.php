@@ -24,6 +24,7 @@ class Plan extends Model
         'hashrate',
         'badge_text',
         'image_url',
+        'is_free',
     ];
 
     /**
@@ -45,5 +46,10 @@ class Plan extends Model
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
+    }
+
+    public function histories()
+    {
+        return $this->hasMany(MiningHistory::class);
     }
 }
