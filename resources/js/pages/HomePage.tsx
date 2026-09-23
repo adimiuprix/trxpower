@@ -24,9 +24,48 @@ export default function HomePage() {
     const user = useTelegramUser();
     const { dbUser } = useTelegramContext();
     const { transactions } = usePage<PageProps>().props;
+    
     // Balance dari database, fallback ke 0 jika belum loaded
-    const balance = dbUser?.balance;
+    const initialBalance = dbUser?.balance ?? 0;
     const walletBalance = dbUser?.wallet_balance ?? 0;
+    const miningHistories = dbUser?.mining_histories ?? [];
+
+    // Real-time mining balance state
+    const [liveBalance, setLiveBalance] = useState<number>(initialBalance);
+    const [totalEarningRate, setTotalEarningRate] = useState<number>(0);
+
+    // Calculate total earning rate per second from all active mining histories
+    useEffect(() => {
+        if (!miningHistories || miningHistories.length === 0) {
+            setTotalEarningRate(0);
+            return;
+        }
+
+        const ratePerSecond = miningHistories
+            .filter(history => history.status === 'active')
+            .reduce((total, history) => {
+                // earning_rate is per minute, convert to per second
+                return total + (history.plan.earning_rate / 60);
+            }, 0);
+
+        setTotalEarningRate(ratePerSecond);
+    }, [miningHistories]);
+
+    // Set initial balance when dbUser changes
+    useEffect(() => {
+        setLiveBalance(initialBalance);
+    }, [initialBalance]);
+
+    // Real-time counter: Update balance every second
+    useEffect(() => {
+        if (totalEarningRate === 0) return;
+
+        const interval = setInterval(() => {
+            setLiveBalance(prev => parseFloat((prev + totalEarningRate).toFixed(8)));
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [totalEarningRate]);
 
     return (
         <AppLayout>
@@ -335,7 +374,7 @@ export default function HomePage() {
                                     className="mining-ticking-number"
                                     id="home-live-mined-amount"
                                 >
-                                    {balance}
+                                    {liveBalance.toFixed(8)}
                                 </span>
                                 <span className="mining-ticking-symbol">
                                     TRX

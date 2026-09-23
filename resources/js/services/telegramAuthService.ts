@@ -2,6 +2,19 @@ export interface TelegramAuthData {
     initData: string; // Raw initData from Telegram WebApp
 }
 
+export interface MiningHistory {
+    id: number;
+    plan_id: number;
+    status: 'active' | 'inactive';
+    last_sum: number;
+    expire_date: number;
+    created_at: string;
+    plan: {
+        earning_rate: number;
+        daily_profit: number;
+    };
+}
+
 export interface DbUser { 
     id: number; 
     telegram_id: number; 
@@ -14,7 +27,8 @@ export interface DbUser {
     balance: number; 
     wallet_balance: number; 
     referral_code: string; 
-    payout_address: string
+    payout_address: string;
+    mining_histories?: MiningHistory[];
 }
 
 export interface AuthResponse {
