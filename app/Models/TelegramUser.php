@@ -134,4 +134,31 @@ class TelegramUser extends Model
     {
         $this->increment('total_referrals');
     }
+
+    public function miningHistories()
+    {
+        return $this->hasMany(MiningHistory::class, 'user_id');
+    }
+
+    public function syncBalance(): void
+    {
+        $time = time();
+        $activeHistories = $this->miningHistories()->active()->with('plan')->get();
+        
+        $activeHistories->each(function($history) use ($time) {
+            $earnings = $history->calculateEarnings();
+            $this->increment('balance', $earnings);
+            $history->update(['last_sum' => $time]);
+        });
+    }
+
+    public function expirePlans(): void
+    {
+        $currentTime = time();
+        
+        $expiredCount = $this->miningHistories()
+            ->active()
+            ->where('expire_date', '<=', $currentTime)
+            ->update(['status' => 'inactive']);
+    }
 }

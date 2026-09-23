@@ -70,14 +70,12 @@ class PlanSeeder extends Seeder
             ],
         ];
 
-        foreach ($plans as $plan) {
+        foreach ($plans as $planData) {
             // Calculate earning_rate from daily_profit
-            // earning_rate = daily_profit / 24 (hourly rate)
-            $plan['earning_rate'] = $plan['daily_profit'] / 24;
-            $plan['created_at'] = now();
-            $plan['updated_at'] = now();
+            // earning_rate = daily_profit / 1440 (per minute rate, 1440 = 24 hours * 60 minutes)
+            $planData['earning_rate'] = $planData['daily_profit'] / 1440;
             
-            Plan::create($plan);
+            Plan::create($planData);
         }
     }
 }

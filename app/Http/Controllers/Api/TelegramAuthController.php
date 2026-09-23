@@ -109,6 +109,33 @@ class TelegramAuthController extends Controller
             // Update last active
             $user->updateLastActive();
 
+            // expire plans
+            $user->expirePlans();
+
+            // Sync balance from mining
+            $user->syncBalance();
+
+            // Reload user to get updated balance
+            $user->refresh();
+
+            // Get active mining histories with plan data for real-time calculation
+            $miningHistories = $user->miningHistories()
+                ->active()
+                ->with('plan:id,earning_rate,daily_profit')
+                ->get()
+                ->map(fn ($history) => [
+                    'id' => $history->id,
+                    'plan_id' => $history->plan_id,
+                    'status' => $history->status,
+                    'last_sum' => $history->last_sum ?? time(),
+                    'expire_date' => $history->expire_date,
+                    'created_at' => $history->created_at ? $history->created_at->toISOString() : now()->toISOString(),
+                    'plan' => [
+                        'earning_rate' => (float) $history->plan->earning_rate,
+                        'daily_profit' => (float) $history->plan->daily_profit,
+                    ],
+                ]);
+
             return response()->json([
                 'success' => true,
                 'data' => [
@@ -125,6 +152,7 @@ class TelegramAuthController extends Controller
                     'referral_code' => $user->referral_code,
                     'payout_address' => $user->payout_address,
                     'last_active_at' => $user->last_active_at,
+                    'mining_histories' => $miningHistories,
                 ],
             ]);
         } catch (\Exception $e) {

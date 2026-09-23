@@ -1,6 +1,7 @@
 import AppLayout from '@/layouts/AppLayout';
 import { useTelegramContext, useTelegramUser } from '@/providers/TelegramProvider';
 import { usePage } from '@inertiajs/react';
+import { useEffect, useState } from 'react'
 
 interface Transaction {
     id: number;
@@ -23,9 +24,8 @@ export default function HomePage() {
     const user = useTelegramUser();
     const { dbUser } = useTelegramContext();
     const { transactions } = usePage<PageProps>().props;
-
     // Balance dari database, fallback ke 0 jika belum loaded
-    const balance = dbUser?.balance ?? 0;
+    const balance = dbUser?.balance;
     const walletBalance = dbUser?.wallet_balance ?? 0;
 
     return (
@@ -311,7 +311,7 @@ export default function HomePage() {
                             </svg>
                         </div>
 
-                        {/* Middle: Mining Status, Live Ticking TRX Amount, and Daily 0.1 TRX Subtitle */}
+                        {/* Middle: Mining Status, Live Ticking TRX Amount */}
                         <div className="mining-status-center-info">
                             <div className="mining-status-header-line">
                                 <span className="mining-status-label">
@@ -335,7 +335,7 @@ export default function HomePage() {
                                     className="mining-ticking-number"
                                     id="home-live-mined-amount"
                                 >
-                                    {balance.toFixed(4)}
+                                    {balance}
                                 </span>
                                 <span className="mining-ticking-symbol">
                                     TRX

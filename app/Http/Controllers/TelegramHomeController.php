@@ -10,6 +10,8 @@ class TelegramHomeController extends Controller
 {
     public function index()
     {
+        $user = auth('sanctum')->user();
+
         $transactions = Transaction::where('status', 'completed')
             ->latest()
             ->paginate(20)
@@ -24,8 +26,30 @@ class TelegramHomeController extends Controller
                 'created_at' => $transaction->created_at->diffForHumans(),
             ]);
 
+        // Get active mining histories with plan data
+        $miningHistories = [];
+        if ($user) {
+            $miningHistories = $user->miningHistories()
+                ->active()
+                ->with('plan:id,earning_rate,daily_profit')
+                ->get()
+                ->map(fn ($history) => [
+                    'id' => $history->id,
+                    'plan_id' => $history->plan_id,
+                    'status' => $history->status,
+                    'last_sum' => $history->last_sum,
+                    'expire_date' => $history->expire_date,
+                    'created_at' => $history->created_at->toISOString(),
+                    'plan' => [
+                        'earning_rate' => (float) $history->plan->earning_rate,
+                        'daily_profit' => (float) $history->plan->daily_profit,
+                    ],
+                ]);
+        }
+
         return Inertia::render('HomePage', [
             'transactions' => $transactions,
+            'miningHistories' => $miningHistories,
         ]);
     }
 
