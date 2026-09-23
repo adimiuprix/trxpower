@@ -25,47 +25,45 @@ export default function HomePage() {
     const { dbUser } = useTelegramContext();
     const { transactions } = usePage<PageProps>().props;
     
-    // Balance dari database, fallback ke 0 jika belum loaded
-    const initialBalance = dbUser?.balance ?? 0;
+    // Balance dari database
+    const serverBalance = dbUser?.balance ?? 0;
     const walletBalance = dbUser?.wallet_balance ?? 0;
     const miningHistories = dbUser?.mining_histories ?? [];
 
     // Real-time mining balance state
-    const [liveBalance, setLiveBalance] = useState<number>(initialBalance);
-    const [totalEarningRate, setTotalEarningRate] = useState<number>(0);
+    const [liveBalance, setLiveBalance] = useState<number>(serverBalance);
 
-    // Calculate total earning rate per second from all active mining histories
+    // Calculate live balance with sub-second precision using floating-point timestamp
+    const calculateCurrentBalance = (): number => {
+        const nowMs = Date.now() / 1000; // float seconds untuk presisi sub-detik
+        
+        return (miningHistories ?? []).reduce((balance, history) => {
+            if (history.status !== 'active') return balance;
+            const startSec = history.last_sum
+                ?? Math.floor(new Date(history.created_at).getTime() / 1000);
+            const earned = (nowMs - startSec) * (history.plan.earning_rate / 60);
+            return balance + earned;
+        }, serverBalance);
+    };
+
+    // Update live balance setiap frame (~60fps) untuk animasi smooth
     useEffect(() => {
         if (!miningHistories || miningHistories.length === 0) {
-            setTotalEarningRate(0);
+            setLiveBalance(serverBalance);
             return;
         }
 
-        const ratePerSecond = miningHistories
-            .filter(history => history.status === 'active')
-            .reduce((total, history) => {
-                // earning_rate is per minute, convert to per second
-                return total + (history.plan.earning_rate / 60);
-            }, 0);
+        let rafId: number;
 
-        setTotalEarningRate(ratePerSecond);
-    }, [miningHistories]);
+        const tick = () => {
+            setLiveBalance(calculateCurrentBalance());
+            rafId = requestAnimationFrame(tick);
+        };
 
-    // Set initial balance when dbUser changes
-    useEffect(() => {
-        setLiveBalance(initialBalance);
-    }, [initialBalance]);
+        rafId = requestAnimationFrame(tick);
 
-    // Real-time counter: Update balance every second
-    useEffect(() => {
-        if (totalEarningRate === 0) return;
-
-        const interval = setInterval(() => {
-            setLiveBalance(prev => parseFloat((prev + totalEarningRate).toFixed(8)));
-        }, 1000);
-
-        return () => clearInterval(interval);
-    }, [totalEarningRate]);
+        return () => cancelAnimationFrame(rafId);
+    }, [serverBalance, miningHistories]);
 
     return (
         <AppLayout>

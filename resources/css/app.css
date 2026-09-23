@@ -1045,6 +1045,14 @@ html[data-theme="dark"] .mining-status-pill.standby {
     letter-spacing: -0.3px;
     line-height: 1.1;
     font-variant-numeric: tabular-nums;
+    will-change: contents;
+    /* Subtle live glow pulse */
+    animation: counter-glow-pulse 2s ease-in-out infinite;
+}
+
+@keyframes counter-glow-pulse {
+    0%, 100% { text-shadow: 0 0 0px transparent; }
+    50%       { text-shadow: 0 0 10px rgba(255, 255, 255, 0.18); }
 }
 
 .mining-ticking-symbol {
