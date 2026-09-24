@@ -33,11 +33,11 @@ export default function HomePage() {
 
     // Balance dari database
     const serverBalance = dbUser?.balance ?? 0;
-    const walletBalance = dbUser?.wallet_balance ?? 0;
     const miningHistories = dbUser?.mining_histories ?? [];
 
     // Real-time mining balance state
     const [liveBalance, setLiveBalance] = useState<number>(serverBalance);
+    const [walletBalance, setWalletBalance] = useState<number>(dbUser?.wallet_balance ?? 0);
     const [isClaiming, setIsClaiming] = useState(false);
     // Flag untuk pause RAF tick saat claim — pakai ref agar tidak trigger re-render
     const isPausedRef = useRef(false);
@@ -54,6 +54,11 @@ export default function HomePage() {
             return balance + earned;
         }, serverBalance);
     };
+
+    // Sync walletBalance dengan dbUser
+    useEffect(() => {
+        setWalletBalance(dbUser?.wallet_balance ?? 0);
+    }, [dbUser?.wallet_balance]);
 
     // Update live balance setiap frame (~60fps) untuk animasi smooth
     useEffect(() => {
@@ -112,6 +117,8 @@ export default function HomePage() {
                 setLiveBalance(0);
                 await new Promise(resolve => setTimeout(resolve, 3000));
                 await refreshDbUser();
+                // Update walletBalance setelah refresh
+                setWalletBalance(data.new_wallet_balance ?? (dbUser?.wallet_balance ?? 0));
                 isPausedRef.current = false;
             } else {
                 toaster.semantic.error(data.message || 'Unable to connect to server. Please check your connection.');

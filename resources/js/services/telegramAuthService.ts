@@ -35,6 +35,7 @@ export interface DbUser {
     wallet_balance: number; 
     referral_code: string;
     referral_total: number;
+    referrals: Referrals[];
     payout_address: string;
     mining_histories?: MiningHistory[];
 }

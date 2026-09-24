@@ -5,6 +5,7 @@ export default function ReferralPage() {
     const { dbUser } = useTelegramContext();
     const reffCode = dbUser?.referral_code
     const totReff = dbUser?.referral_total
+    const referrals = dbUser?.referrals
     const earning = dbUser?.earning
 
     return (
@@ -306,48 +307,153 @@ export default function ReferralPage() {
                             Live Network
                         </span>
                     </div>
-                    <div
-                        id="referral-downlines-list"
-                        style={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: '8px',
-                        }}
-                    >
+
+                    {referrals?.length ? (
+                        referrals.map((referral) => (
                         <div
+                            key={referral?.id}
+                            className="task-item-card"
                             style={{
-                                textAlign: 'center',
-                                padding: '28px 16px',
-                                color: 'var(--text-muted)',
-                                fontSize: '13px',
-                                background: 'var(--bg-card)',
-                                borderRadius: 'var(--radius-md)',
-                                border: '1px dashed var(--border-card)',
+                                padding: '12px 14px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                gap: 10,
                             }}
                         >
                             <div
                                 style={{
-                                    fontSize: '24px',
-                                    marginBottom: '6px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 10,
+                                    minWidth: 0,
                                 }}
                             >
-                                👥
+                                <div
+                                    style={{
+                                        width: 34,
+                                        height: 34,
+                                        borderRadius: '50%',
+                                        background: 'linear-gradient(135deg, #FF1E40, #99041E)',
+                                        color: '#fff',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        fontWeight: 800,
+                                        fontSize: 13,
+                                        flexShrink: 0,
+                                    }}
+                                >
+                                    V
+                                </div>
+
+                                <div className="task-info-group" style={{ minWidth: 0 }}>
+                                    <span
+                                        className="task-title"
+                                        style={{
+                                            fontSize: 13,
+                                            fontWeight: 700,
+                                            whiteSpace: 'nowrap',
+                                            overflow: 'hidden',
+                                            textOverflow: 'ellipsis',
+                                        }}
+                                    >
+                                        @{referral?.username}
+                                    </span>
+                                    <div
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 6,
+                                            marginTop: 2,
+                                        }}
+                                    >
+                                        <span
+                                            className="task-desc"
+                                            style={{
+                                                color: 'var(--emerald-green)',
+                                                fontWeight: 600,
+                                                fontSize: 11,
+                                            }}
+                                        >
+                                            Dep: 0.00 TRX
+                                        </span>
+
+                                        <span
+                                            style={{
+                                                fontSize: 10,
+                                                color: 'var(--text-muted)',
+                                            }}
+                                        >
+                                            24/09/2026
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
+
+                            <div style={{ flexShrink: 0 }}>
+                                <span
+                                    style={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: 4,
+                                        fontSize: 10,
+                                        fontWeight: 700,
+                                        color: '#F59E0B',
+                                        background: 'rgba(245, 158, 11, 0.12)',
+                                        padding: '3px 8px',
+                                        borderRadius: 6,
+                                        border: '1px solid rgba(245, 158, 11, 0.25)',
+                                    }}
+                                >
+                                    ⏳ Pending
+                                </span>
+                            </div>
+                        </div>
+                        ))
+                    ) : (
+                        <div
+                            style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '8px',
+                            }}
+                        >
                             <div
                                 style={{
-                                    fontWeight: 600,
-                                    color: 'var(--text-main)',
-                                    marginBottom: '2px',
+                                    textAlign: 'center',
+                                    padding: '28px 16px',
+                                    color: 'var(--text-muted)',
+                                    fontSize: '13px',
+                                    background: 'var(--bg-card)',
+                                    borderRadius: 'var(--radius-md)',
+                                    border: '1px dashed var(--border-card)',
                                 }}
                             >
-                                No downlines yet
+                                <div
+                                    style={{
+                                        fontSize: '24px',
+                                        marginBottom: '6px',
+                                    }}
+                                >
+                                    👥
+                                </div>
+                                <div
+                                    style={{
+                                        fontWeight: 600,
+                                        color: 'var(--text-main)',
+                                        marginBottom: '2px',
+                                    }}
+                                >
+                                    No downlines yet
+                                </div>
+                                <span>
+                                    Share your invite link above to earn 5% instant
+                                    TRX commissions!
+                                </span>
                             </div>
-                            <span>
-                                Share your invite link above to earn 5% instant
-                                TRX commissions!
-                            </span>
                         </div>
-                    </div>
+                    )}
                 </div>
             </section>
         </AppLayout>
