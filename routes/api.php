@@ -26,6 +26,7 @@ Route::prefix('telegram')->name('telegram.')->group(function () {
     // Protected endpoints - require Sanctum token
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/me', [TelegramAuthController::class, 'me'])->name('me');
+        Route::post('/claim', [TelegramAuthController::class, 'claim'])->name('claim');
         Route::post('/payout-address', [TelegramPayoutController::class, 'updatePayoutAddress'])->name('payout-address.update');
         Route::post('/logout', [TelegramAuthController::class, 'logout'])->name('logout');
     });

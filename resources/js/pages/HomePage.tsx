@@ -1,7 +1,13 @@
 import AppLayout from '@/layouts/AppLayout';
 import { useTelegramContext, useTelegramUser } from '@/providers/TelegramProvider';
 import { usePage } from '@inertiajs/react';
-import { useEffect, useState } from 'react'
+import { createToaster } from "@codenhub/toaster";
+import { useEffect, useRef, useState } from 'react'
+
+const toaster = createToaster({
+    position: "top-center",
+    duration: 3000,
+});
 
 interface Transaction {
     id: number;
@@ -22,9 +28,9 @@ interface PageProps {
 
 export default function HomePage() {
     const user = useTelegramUser();
-    const { dbUser } = useTelegramContext();
+    const { dbUser, haptic, refreshDbUser } = useTelegramContext();
     const { transactions } = usePage<PageProps>().props;
-    
+
     // Balance dari database
     const serverBalance = dbUser?.balance ?? 0;
     const walletBalance = dbUser?.wallet_balance ?? 0;
@@ -32,11 +38,14 @@ export default function HomePage() {
 
     // Real-time mining balance state
     const [liveBalance, setLiveBalance] = useState<number>(serverBalance);
+    const [isClaiming, setIsClaiming] = useState(false);
+    // Flag untuk pause RAF tick saat claim — pakai ref agar tidak trigger re-render
+    const isPausedRef = useRef(false);
 
     // Calculate live balance with sub-second precision using floating-point timestamp
     const calculateCurrentBalance = (): number => {
         const nowMs = Date.now() / 1000; // float seconds untuk presisi sub-detik
-        
+
         return (miningHistories ?? []).reduce((balance, history) => {
             if (history.status !== 'active') return balance;
             const startSec = history.last_sum
@@ -56,7 +65,9 @@ export default function HomePage() {
         let rafId: number;
 
         const tick = () => {
-            setLiveBalance(calculateCurrentBalance());
+            if (!isPausedRef.current) {
+                setLiveBalance(calculateCurrentBalance());
+            }
             rafId = requestAnimationFrame(tick);
         };
 
@@ -64,6 +75,54 @@ export default function HomePage() {
 
         return () => cancelAnimationFrame(rafId);
     }, [serverBalance, miningHistories]);
+
+    const handleClaim = async () => {
+        if (isClaiming) return;
+
+        setIsClaiming(true);
+        try {
+            // take token from telegramAuthService
+            const token = localStorage.getItem('telegram_auth_token');
+
+            if (!token) {
+                toaster.semantic.error('Please login again to continue');
+                return;
+            }
+
+            // Send request to api
+            const response = await fetch('/api/telegram/claim', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    telegram_id: user?.id,
+                }),
+            });
+
+            const data = await response.json();
+
+            // handle response
+            if (data.success) {
+                toaster.semantic.success(data.message || 'Claim successful!');
+                // Pause RAF tick & set balance ke 0 agar user melihat angka 0 selama 3 detik
+                isPausedRef.current = true;
+                setLiveBalance(0);
+                await new Promise(resolve => setTimeout(resolve, 3000));
+                await refreshDbUser();
+                isPausedRef.current = false;
+            } else {
+                toaster.semantic.error(data.message || 'Unable to connect to server. Please check your connection.');
+            }
+        } catch (error: any) {
+            console.error('Error claiming mining:', error);
+            toaster.semantic.error('Unable to connect to server. Please check your connection.');
+        } finally {
+            setIsClaiming(false);
+        }
+    }
 
     return (
         <AppLayout>
@@ -389,22 +448,38 @@ export default function HomePage() {
                         {/* Right Action Button: Start / Claim */}
                         <button
                             type="button"
+                            onClick={handleClaim}
+                            disabled={isClaiming}
                             className="btn-mining-action btn-mining-claim"
-                            id="btn-home-mining-action"
                         >
                             <span id="mining-action-btn-icon">
-                                <svg
-                                    width="13"
-                                    height="13"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2.5"
-                                >
-                                    <polyline points="20 6 9 17 4 12"></polyline>
-                                </svg>
+                                {isClaiming ? (
+                                    <svg
+                                        width="13"
+                                        height="13"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2.5"
+                                        style={{ animation: 'spin 1s linear infinite' }}
+                                    >
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <path d="M12 2a10 10 0 0 1 10 10"></path>
+                                    </svg>
+                                ) : (
+                                    <svg
+                                        width="13"
+                                        height="13"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2.5"
+                                    >
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                )}
                             </span>
-                            <span id="mining-action-btn-label">Claim</span>
+                            <span>{isClaiming ? 'Claiming...' : 'Claim'}</span>
                         </button>
                     </div>
                 </div>

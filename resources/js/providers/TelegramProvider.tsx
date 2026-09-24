@@ -42,6 +42,7 @@ interface TelegramContextValue {
     raw: ReturnType<typeof useTelegram>['raw'];
     isAuthenticating: boolean;
     isAuthenticated: boolean;
+    refreshDbUser: () => Promise<void>;
 }
 
 const TelegramContext = createContext<TelegramContextValue | undefined>(undefined);
@@ -63,6 +64,17 @@ export function TelegramProvider({ children }: TelegramProviderProps) {
     const [isAuthenticating, setIsAuthenticating] = useState(false);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [dbUser, setDbUser] = useState<UserResponse | null>(null);
+
+    const refreshDbUser = async () => {
+        try {
+            const meResult = await telegramAuthService.me();
+            if (meResult.success && meResult.data) {
+                setDbUser(meResult.data);
+            }
+        } catch (e) {
+            console.warn('⚠️ Failed to refresh user data:', e);
+        }
+    };
 
     useEffect(() => {
         try {
@@ -178,12 +190,13 @@ export function TelegramProvider({ children }: TelegramProviderProps) {
     }, [telegram.user, isAuthenticated, isAuthenticating]);
 
     return (
-        <TelegramContext.Provider 
+        <TelegramContext.Provider
             value={{
                 ...telegram,
                 dbUser,
                 isAuthenticating,
                 isAuthenticated,
+                refreshDbUser,
             }}
         >
             {children}

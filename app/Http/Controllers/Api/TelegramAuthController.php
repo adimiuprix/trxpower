@@ -7,6 +7,7 @@ use App\Models\TelegramUser;
 use App\Services\TelegramAuthService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
@@ -28,20 +29,20 @@ class TelegramAuthController extends Controller
     public function authenticate(Request $request): JsonResponse
     {
         try {
-            $initData = $request->validate([ 
-                'initData' => 'required|string'
-            ])['initData']; 
-            
-            abort_unless( 
-                $this->telegramAuth->validateInitData($initData), 
-                401, 
-                'Invalid Telegram authentication data' 
-            ); 
-            
+            $initData = $request->validate([
+                'initData' => 'required|string',
+            ])['initData'];
+
+            abort_unless(
+                $this->telegramAuth->validateInitData($initData),
+                401,
+                'Invalid Telegram authentication data'
+            );
+
             $userData = $this->telegramAuth->parseUserData($initData);
 
-            abort_if( 
-                empty($userData['id']), 400, 'User ID not found in Telegram data' 
+            abort_if(
+                empty($userData['id']), 400, 'User ID not found in Telegram data'
             );
 
             // Create or update user
@@ -163,6 +164,40 @@ class TelegramAuthController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to get user data',
+            ], 500);
+        }
+    }
+
+    public function claim(Request $request): JsonResponse
+    {
+        try {
+            // Get authenticated user from Sanctum
+            $user = $request->user('sanctum');
+
+            if (! $user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthenticated',
+                ], 401);
+            }
+
+            DB::transaction(function () use ($user) {
+                $user = TelegramUser::lockForUpdate()->find($user->id);
+                $user->increment('wallet_balance', $user->balance);
+                $user->update(['balance' => 0]);
+            });
+
+            return response()->json([
+                'success' => true,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to get user data', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to claim',
             ], 500);
         }
     }

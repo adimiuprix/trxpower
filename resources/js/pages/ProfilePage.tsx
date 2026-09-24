@@ -83,8 +83,8 @@ export default function ProfilePage() {
     ];
 
     // Filter transaksi berdasarkan tab yang aktif
-    const filteredTransactions = activeTab === 'all' 
-        ? allTransactions 
+    const filteredTransactions = activeTab === 'all'
+        ? allTransactions
         : allTransactions.filter(tx => tx.type === activeTab);
 
     // Handler untuk ganti tab dengan haptic feedback
@@ -192,7 +192,7 @@ export default function ProfilePage() {
         setIsSaving(true);
 
         try {
-            // Ambil token dari telegramAuthService
+            // take token from telegramAuthService
             const token = localStorage.getItem('telegram_auth_token');
 
             if (!token) {
@@ -200,7 +200,7 @@ export default function ProfilePage() {
                 return;
             }
 
-            // Kirim request ke API
+            // Send request to api
             const response = await fetch('/api/telegram/payout-address', {
                 method: 'POST',
                 headers: {
@@ -416,17 +416,17 @@ export default function ProfilePage() {
                             Not Bound</span>
                     </div>
                     <div className="copy-input-row">
-                        
-                        <input 
-                            type="text" 
-                            placeholder="Enter TRON address starting with T..." 
-                            value={payoutAddress} 
+
+                        <input
+                            type="text"
+                            placeholder="Enter TRON address starting with T..."
+                            value={payoutAddress}
                             onChange={(e) => setPayoutAddress(e.target.value)}
                             disabled={isSaving}
                         />
 
-                        <button 
-                            onClick={handleSaveAddress} 
+                        <button
+                            onClick={handleSaveAddress}
                             className="btn-copy"
                             disabled={isSaving}
                         >
@@ -461,7 +461,7 @@ export default function ProfilePage() {
                                     padding: '1px 7px',
                                     borderRadius: '999px',
                                 }}
-                                >{filteredTransactions.length}
+                            >{filteredTransactions.length}
                             </span>
                         </h4>
                         <button
