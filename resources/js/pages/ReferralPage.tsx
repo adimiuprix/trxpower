@@ -4,6 +4,8 @@ import { useTelegramContext } from '@/providers/TelegramProvider';
 export default function ReferralPage() {
     const { dbUser } = useTelegramContext();
     const reffCode = dbUser?.referral_code
+    const totReff = dbUser?.referral_total
+    const earning = dbUser?.earning
 
     return (
         <AppLayout>
@@ -63,7 +65,7 @@ export default function ReferralPage() {
                                 className="ref-stat-value"
                                 id="referral-total-count-box"
                             >
-                                0
+                                {totReff}
                             </div>
                             <span className="ref-stat-label">
                                 Total Referrals
@@ -98,7 +100,7 @@ export default function ReferralPage() {
                         <div className="ref-stat-body">
                             <div className="ref-stat-value">
                                 <span id="referral-total-earned-box">
-                                    0.0000
+                                    {Number(earning || 0).toFixed(4)}
                                 </span>{' '}
                                 <small>TRX</small>
                             </div>
@@ -241,7 +243,7 @@ export default function ReferralPage() {
                             type="text"
                             id="referral-link-input"
                             readOnly
-                            value="https://t.me/trxbusiness_bot/app?startapp=ref_TRX777999"
+                            value={`https://t.me/trxbusiness_bot/app?startapp=ref_${reffCode}`}
                         />
                         <button className="btn-copy">Copy</button>
                     </div>

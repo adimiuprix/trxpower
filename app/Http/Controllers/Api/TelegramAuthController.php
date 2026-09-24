@@ -151,9 +151,12 @@ class TelegramAuthController extends Controller
                     'balance' => (float) $user->balance,
                     'wallet_balance' => (float) $user->wallet_balance,
                     'referral_code' => $user->referral_code,
+                    'referral_total' => $user->referrals()->count(),
+                    'referrals' => $user->referrals,
                     'payout_address' => $user->payout_address,
                     'last_active_at' => $user->last_active_at,
                     'mining_histories' => $miningHistories,
+                    'earning' => $user->earning,
                 ],
             ]);
         } catch (\Exception $e) {

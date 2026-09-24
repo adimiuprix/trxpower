@@ -15,6 +15,12 @@ export interface MiningHistory {
     };
 }
 
+export interface Referrals {
+    id: number;
+    username: string | null; 
+    photo_url: string | null;
+}
+
 export interface DbUser { 
     id: number; 
     telegram_id: number; 
@@ -25,8 +31,10 @@ export interface DbUser {
     is_premium: boolean; 
     photo_url: string | null; 
     balance: number; 
+    earning: number;
     wallet_balance: number; 
-    referral_code: string; 
+    referral_code: string;
+    referral_total: number;
     payout_address: string;
     mining_histories?: MiningHistory[];
 }
