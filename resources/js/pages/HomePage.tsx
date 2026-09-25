@@ -22,14 +22,13 @@ interface Transaction {
 }
 
 interface PageProps {
-    transactions: {
-        data: Transaction[];
-    };
+    transactions: { data: Transaction[] };
+    [key: string]: unknown;
 }
 
 export default function HomePage() {
     const user = useTelegramUser();
-    const { dbUser, haptic, refreshDbUser } = useTelegramContext();
+    const { dbUser, refreshDbUser } = useTelegramContext();
     const { transactions } = usePage<PageProps>().props;
 
     // Balance dari database
@@ -42,6 +41,16 @@ export default function HomePage() {
     const [isClaiming, setIsClaiming] = useState(false);
     // Flag untuk pause RAF tick saat claim — pakai ref agar tidak trigger re-render
     const isPausedRef = useRef(false);
+
+    // Calculate total hashrate from all active plans
+    const calculateTotalHashrate = () => {
+        const total = (miningHistories ?? []).filter(hash => hash.status === 'active').reduce((hashrate, h) => {
+            const [, val, unit] = (h.plan?.hashrate ?? '0 GH/s').match(/^([\d.]+)\s*([A-Z]+\/s)$/i) ?? [];
+            return hashrate + parseFloat(val || '0') * ({'TH/S': 1000, 'GH/S': 1, 'MH/S': .001}[unit?.toUpperCase() ?? 'GH/S'] ?? 0);
+        }, 0);
+
+        return total >= 1000 ? `${(total / 1000).toFixed(1)} TH/s` : total < 1 ? `${(total * 1000).toFixed(0)} MH/s` : `${total.toFixed(1)} GH/s`;
+    };
 
     // Calculate live balance with sub-second precision using floating-point timestamp
     const calculateCurrentBalance = (): number => {
@@ -277,7 +286,7 @@ export default function HomePage() {
                                     className="mining-hash-label"
                                     id="card-mining-rate"
                                 >
-                                    10 GH/s
+                                    {calculateTotalHashrate()}
                                 </span>
                             </div>
                         </div>

@@ -123,7 +123,7 @@ class TelegramAuthController extends Controller
             // Get active mining histories with plan data for real-time calculation
             $miningHistories = $user->miningHistories()
                 ->active()
-                ->with('plan:id,earning_rate,daily_profit')
+                ->with('plan:id,earning_rate,daily_profit,hashrate')
                 ->get()
                 ->map(fn ($history) => [
                     'id' => $history->id,
@@ -135,6 +135,7 @@ class TelegramAuthController extends Controller
                     'plan' => [
                         'earning_rate' => (float) $history->plan->earning_rate,
                         'daily_profit' => (float) $history->plan->daily_profit,
+                        'hashrate' => $history->plan->hashrate ?? '0 GH/s',
                     ],
                 ]);
 

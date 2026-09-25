@@ -12,6 +12,7 @@ export interface MiningHistory {
     plan: {
         earning_rate: number;
         daily_profit: number;
+        hashrate: string;
     };
 }
 
