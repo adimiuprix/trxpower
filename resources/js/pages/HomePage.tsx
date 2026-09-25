@@ -1,6 +1,5 @@
 import AppLayout from '@/layouts/AppLayout';
 import { useTelegramContext, useTelegramUser } from '@/providers/TelegramProvider';
-import { usePage } from '@inertiajs/react';
 import { createToaster } from "@codenhub/toaster";
 import { useEffect, useRef, useState } from 'react'
 
@@ -19,21 +18,14 @@ interface Transaction {
     created_at: string;
 }
 
-interface PageProps {
-    transactions: {
-        data: Transaction[];
-    };
-    [key: string]: unknown;
-}
-
 export default function HomePage() {
     const user = useTelegramUser();
     const { dbUser, haptic, refreshDbUser } = useTelegramContext();
-    const { transactions } = usePage<PageProps>().props;
 
     // Balance dari database
     const serverBalance = dbUser?.balance ?? 0;
     const miningHistories = dbUser?.mining_histories ?? [];
+    const transactions = dbUser?.transactions ?? [];
 
     // Real-time mining balance state
     const [liveBalance, setLiveBalance] = useState<number>(serverBalance);
@@ -642,12 +634,12 @@ export default function HomePage() {
 
                         {/* Dynamic List of Transactions */}
                         <div className="tx-items-list">
-                            {transactions?.data?.length === 0 && (
+                            {transactions?.length === 0 && (
                                 <div className="tx-item" style={{ justifyContent: 'center', opacity: 0.5 }}>
                                     <span>No transactions yet</span>
                                 </div>
                             )}
-                            {transactions?.data?.map((tx) => (
+                            {transactions?.map((tx) => (
                                 <div
                                     key={tx.id}
                                     className={`tx-item tx-item-pop-in ${tx.type}`}

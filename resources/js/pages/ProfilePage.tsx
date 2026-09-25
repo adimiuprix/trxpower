@@ -16,71 +16,10 @@ export default function ProfilePage() {
 
     const [payoutAddress, setPayoutAddress] = useState(dbUser?.payout_address || '')
     const [isSaving, setIsSaving] = useState(false)
-    const [activeTab, setActiveTab] = useState<'all' | 'deposits' | 'withdrawals' | 'mining'>('all')
+    const [activeTab, setActiveTab] = useState<'all' | 'deposit' | 'withdraw' | 'mining'>('all')
 
-    // Data transaksi (nanti bisa diganti dengan fetch dari API)
-    const allTransactions = [
-        {
-            id: 1,
-            type: 'mining',
-            title: 'Claimed mining yield (0.178022 TRX) from free plan & active rigs',
-            amount: 0.1780,
-            balanceAfter: 0.1875,
-            date: '21 Sept 2026',
-            time: '08:38',
-            isPositive: true,
-        },
-        {
-            id: 2,
-            type: 'mining',
-            title: 'Claimed mining yield (0.000011 TRX) from free plan & active rigs',
-            amount: 0.0000,
-            balanceAfter: 0.0095,
-            date: '19 Sept 2026',
-            time: '13:55',
-            isPositive: true,
-        },
-        {
-            id: 3,
-            type: 'deposits',
-            title: 'Deposit to mining balance via TRC20 transfer',
-            amount: 50.00,
-            balanceAfter: 50.00,
-            date: '18 Sept 2026',
-            time: '10:22',
-            isPositive: true,
-        },
-        {
-            id: 4,
-            type: 'deposits',
-            title: 'Withdrawal request to TRON wallet',
-            amount: 10.50,
-            balanceAfter: 39.50,
-            date: '17 Sept 2026',
-            time: '15:30',
-            isPositive: false,
-        },
-        {
-            id: 5,
-            type: 'deposits',
-            title: 'Deposit to mining balance via TRC20 transfer',
-            amount: 25.00,
-            balanceAfter: 75.00,
-            date: '16 Sept 2026',
-            time: '09:15',
-            isPositive: true,
-        },
-        {
-            id: 6,
-            type: 'mining',
-            title: 'Claimed mining yield (0.095522 TRX) from free plan & active rigs',
-            amount: 0.0955,
-            balanceAfter: 0.1050,
-            date: '15 Sept 2026',
-            time: '14:20',
-            isPositive: true,
-        },
-    ];
+    // Ambil transaksi dari dbUser
+    const allTransactions = dbUser?.transactions ?? [];
 
     // Filter transaksi berdasarkan tab yang aktif
     const filteredTransactions = activeTab === 'all'
@@ -88,9 +27,23 @@ export default function ProfilePage() {
         : allTransactions.filter(tx => tx.type === activeTab);
 
     // Handler untuk ganti tab dengan haptic feedback
-    const handleTabChange = (tab: 'all' | 'deposits' | 'withdrawals' | 'mining') => {
+    const handleTabChange = (tab: 'all' | 'deposit' | 'withdraw' | 'mining') => {
         setActiveTab(tab);
         haptic.selection(); // Haptic feedback saat tab berganti
+    };
+
+    // Function untuk mendapatkan title transaksi
+    const getTransactionTitle = (type: string, amount: string) => {
+        switch (type) {
+            case 'mining':
+                return `Claimed mining yield (${amount} TRX) from active mining rigs`;
+            case 'deposit':
+                return 'Deposit to mining balance via TRC20 transfer';
+            case 'withdraw':
+                return 'Withdrawal request to TRON wallet';
+            default:
+                return 'Transaction';
+        }
     };
 
     // Function untuk render icon berdasarkan tipe transaksi
@@ -113,7 +66,7 @@ export default function ProfilePage() {
                         </svg>
                     </div>
                 );
-            case 'deposits':
+            case 'deposit':
                 return (
                     <div className="tx-card-icon tx-deposit">
                         <svg
@@ -129,7 +82,7 @@ export default function ProfilePage() {
                         </svg>
                     </div>
                 );
-            case 'withdrawals':
+            case 'withdraw':
                 return (
                     <div className="tx-card-icon tx-withdraw">
                         <svg
@@ -498,15 +451,15 @@ export default function ProfilePage() {
                         </button>
                         <button
                             type="button"
-                            className={`history-filter-chip ${activeTab === 'deposits' ? 'active' : ''}`}
-                            onClick={() => handleTabChange('deposits')}
+                            className={`history-filter-chip ${activeTab === 'deposit' ? 'active' : ''}`}
+                            onClick={() => handleTabChange('deposit')}
                         >
                             Deposits
                         </button>
                         <button
                             type="button"
-                            className={`history-filter-chip ${activeTab === 'withdrawals' ? 'active' : ''}`}
-                            onClick={() => handleTabChange('withdrawals')}
+                            className={`history-filter-chip ${activeTab === 'withdraw' ? 'active' : ''}`}
+                            onClick={() => handleTabChange('withdraw')}
                         >
                             Withdrawals
                         </button>
@@ -527,15 +480,16 @@ export default function ProfilePage() {
                                     <div className="tx-card-left">
                                         {renderTransactionIcon(tx.type)}
                                         <div className="tx-card-details">
-                                            <span className="tx-card-title">{tx.title}</span>
-                                            <span className="tx-card-meta">{tx.date} • {tx.time}</span>
+                                            <span className="tx-card-title">
+                                                {getTransactionTitle(tx.type, tx.amount)}
+                                            </span>
+                                            <span className="tx-card-meta">{tx.created_at}</span>
                                         </div>
                                     </div>
                                     <div className="tx-card-right">
-                                        <span className={`tx-card-amount ${tx.isPositive ? 'tx-positive' : 'tx-negative'}`}>
-                                            {tx.isPositive ? '+' : '-'}{tx.amount.toFixed(4)} TRX
+                                        <span className={`tx-card-amount ${tx.type === 'withdraw' ? 'tx-negative' : 'tx-positive'}`}>
+                                            {tx.type === 'withdraw' ? '-' : '+'}{tx.amount} TRX
                                         </span>
-                                        <span className="tx-card-balance-after">Bal: {tx.balanceAfter.toFixed(4)}</span>
                                     </div>
                                 </div>
                             ))

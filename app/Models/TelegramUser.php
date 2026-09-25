@@ -141,6 +141,11 @@ class TelegramUser extends Model
         return $this->hasMany(MiningHistory::class, 'user_id');
     }
 
+    public function transactions()
+    {
+        return $this->hasMany(Transaction::class, 'user_id');
+    }
+
     public function syncBalance(): void
     {
         $time = time();

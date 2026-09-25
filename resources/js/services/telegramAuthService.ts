@@ -21,6 +21,16 @@ export interface Referrals {
     photo_url: string | null;
 }
 
+export interface Transaction {
+    id: number;
+    type: 'deposit' | 'withdraw' | 'mining';
+    amount: string;
+    address: string | null;
+    tx_hash: string | null;
+    status: 'pending' | 'completed' | 'failed';
+    created_at: string;
+}
+
 export interface DbUser { 
     id: number; 
     telegram_id: number; 
@@ -38,6 +48,7 @@ export interface DbUser {
     referrals: Referrals[];
     payout_address: string;
     mining_histories?: MiningHistory[];
+    transactions?: Transaction[];
 }
 
 export interface AuthResponse {

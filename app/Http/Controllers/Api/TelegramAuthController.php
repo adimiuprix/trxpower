@@ -137,6 +137,21 @@ class TelegramAuthController extends Controller
                     ],
                 ]);
 
+            // Get latest transactions for this user
+            $transactions = $user->transactions()
+                ->latest()
+                ->limit(20)
+                ->get()
+                ->map(fn ($tx) => [
+                    'id' => $tx->id,
+                    'type' => $tx->type,
+                    'amount' => number_format((float) $tx->amount, 4, '.', ''),
+                    'address' => $tx->address,
+                    'tx_hash' => $tx->tx_hash,
+                    'status' => $tx->status,
+                    'created_at' => $tx->created_at->diffForHumans(),
+                ]);
+
             return response()->json([
                 'success' => true,
                 'data' => [
@@ -157,6 +172,7 @@ class TelegramAuthController extends Controller
                     'last_active_at' => $user->last_active_at,
                     'mining_histories' => $miningHistories,
                     'earning' => $user->earning,
+                    'transactions' => $transactions,
                 ],
             ]);
         } catch (\Exception $e) {
@@ -184,14 +200,17 @@ class TelegramAuthController extends Controller
                 ], 401);
             }
 
-            DB::transaction(function () use ($user) {
+            $newWalletBalance = 0;
+            DB::transaction(function () use ($user, &$newWalletBalance) {
                 $user = TelegramUser::lockForUpdate()->find($user->id);
                 $user->increment('wallet_balance', $user->balance);
                 $user->update(['balance' => 0]);
+                $newWalletBalance = $user->wallet_balance;
             });
 
             return response()->json([
                 'success' => true,
+                'new_wallet_balance' => (float) $newWalletBalance,
             ]);
         } catch (\Exception $e) {
             Log::error('Failed to get user data', [
