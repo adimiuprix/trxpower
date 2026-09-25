@@ -139,6 +139,19 @@ class TelegramAuthController extends Controller
                     ],
                 ]);
 
+            // Get total hashrate from active plan
+            $totalHashrate = $miningHistories->sum('plan.hashrate');
+            
+            // Format the total hashrate
+            if ($totalHashrate >= 1000) {
+                $formattedHashrate = number_format($totalHashrate / 1000, 1, '.', '') . ' TH/s';
+            } elseif ($totalHashrate < 1) {
+                $formattedHashrate = number_format($totalHashrate * 1000, 0, '.', '') . ' MH/s';
+            } else {
+                $formattedHashrate = number_format($totalHashrate, 1, '.', '') . ' GH/s';
+            }
+
+
             // Get latest transactions for this user
             $transactions = $user->transactions()
                 ->latest()
@@ -176,6 +189,7 @@ class TelegramAuthController extends Controller
                     'mining_histories' => $miningHistories,
                     'earning' => $user->earning,
                     'transactions' => $transactions,
+                    'total_hashrate' => $formattedHashrate,
                 ],
             ]);
         } catch (\Exception $e) {

@@ -50,6 +50,7 @@ export interface DbUser {
     payout_address: string;
     mining_histories?: MiningHistory[];
     transactions?: Transaction[];
+    total_hashrate?: string;
 }
 
 export interface AuthResponse {

@@ -34,6 +34,7 @@ export default function HomePage() {
     // Balance dari database
     const serverBalance = dbUser?.balance ?? 0;
     const miningHistories = dbUser?.mining_histories ?? [];
+    const totalHashrate = dbUser?.total_hashrate;
 
     // Real-time mining balance state
     const [liveBalance, setLiveBalance] = useState<number>(serverBalance);
@@ -41,16 +42,9 @@ export default function HomePage() {
     const [isClaiming, setIsClaiming] = useState(false);
     // Flag untuk pause RAF tick saat claim — pakai ref agar tidak trigger re-render
     const isPausedRef = useRef(false);
-
-    // Calculate total hashrate from all active plans
-    const calculateTotalHashrate = () => {
-        const total = (miningHistories ?? []).filter(hash => hash.status === 'active').reduce((hashrate, h) => {
-            const [, val, unit] = (h.plan?.hashrate ?? '0 GH/s').match(/^([\d.]+)\s*([A-Z]+\/s)$/i) ?? [];
-            return hashrate + parseFloat(val || '0') * ({'TH/S': 1000, 'GH/S': 1, 'MH/S': .001}[unit?.toUpperCase() ?? 'GH/S'] ?? 0);
-        }, 0);
-
-        return total >= 1000 ? `${(total / 1000).toFixed(1)} TH/s` : total < 1 ? `${(total * 1000).toFixed(0)} MH/s` : `${total.toFixed(1)} GH/s`;
-    };
+    
+    // Modal state
+    const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
 
     // Calculate live balance with sub-second precision using floating-point timestamp
     const calculateCurrentBalance = (): number => {
@@ -284,9 +278,8 @@ export default function HomePage() {
                                 <span className="mining-live-beacon"></span>
                                 <span
                                     className="mining-hash-label"
-                                    id="card-mining-rate"
                                 >
-                                    {calculateTotalHashrate()}
+                                    {totalHashrate ?? '0 GH/s'}
                                 </span>
                             </div>
                         </div>
@@ -298,7 +291,7 @@ export default function HomePage() {
                     {/* Withdraw Button (Red Gradient) */}
                     <button
                         className="action-btn btn-withdraw"
-                        id="btn-home-withdraw"
+                        onClick={() => setIsWithdrawModalOpen(true)}
                     >
                         <div className="action-btn-left">
                             <div className="action-btn-icon">
@@ -713,6 +706,256 @@ export default function HomePage() {
                     </div>
                 </div>
             </section>
+
+            {/* Withdraw Modal */}
+            <Modal 
+                isOpen={isWithdrawModalOpen} 
+                onClose={() => setIsWithdrawModalOpen(false)}
+                title="Withdraw TRX"
+            >
+                {/* VIEW 1: WITHDRAW FORM */}
+                <div style={{ display: 'block' }}>
+
+                    {/* Withdrawable Balance Display */}
+                    <div className="withdraw-balance-banner">
+                        <div className="withdraw-balance-info">
+                            <span className="withdraw-balance-label">Withdrawable Balance</span>
+                            <span className="withdraw-balance-sub">Claimed Mining Rewards</span>
+                        </div>
+                        <div className="withdraw-balance-value">0.0032 TRX</div>
+                    </div>
+
+                    {/* Step 1: Select Wallet / Exchange Destination */}
+                    <div className="withdraw-section-title">
+                        <span>1. Select Destination Platform</span>
+                    </div>
+                    <div className="wallet-provider-grid" id="wallet-provider-selector">
+                        <div className="provider-card active" data-provider="Binance">
+                            <div className="provider-logo-wrap binance-wrap">
+                                <img
+                                    src="images/wallets/binance.svg"
+                                    alt="Binance"
+                                    width="24"
+                                    height="24"
+                                    className="provider-logo-img"
+                                />
+                            </div>
+                            <span className="provider-name">Binance</span>
+                            <div className="provider-badge-check">✓</div>
+                        </div>
+
+                        <div className="provider-card" data-provider="Trust Wallet">
+                            <div className="provider-logo-wrap trust-wrap">
+                                <img
+                                    src="images/wallets/trustwallet.svg"
+                                    alt="Trust Wallet"
+                                    width="24"
+                                    height="24"
+                                    className="provider-logo-img"
+                                />
+                            </div>
+                            <span className="provider-name">Trust Wallet</span>
+                            <div className="provider-badge-check">✓</div>
+                        </div>
+
+                        <div className="provider-card" data-provider="MetaMask">
+                            <div className="provider-logo-wrap metamask-wrap">
+                                <img
+                                    src="images/wallets/metamask.svg"
+                                    alt="MetaMask"
+                                    width="24"
+                                    height="24"
+                                    className="provider-logo-img"
+                                />
+                            </div>
+                            <span className="provider-name">MetaMask</span>
+                            <div className="provider-badge-check">✓</div>
+                        </div>
+
+                        <div className="provider-card" data-provider="TronLink">
+                            <div className="provider-logo-wrap tronlink-wrap">
+                                <img
+                                    src="images/wallets/tronlink.png"
+                                    alt="TronLink"
+                                    width="24"
+                                    height="24"
+                                    className="provider-logo-img"
+                                />
+                            </div>
+                            <span className="provider-name">TronLink</span>
+                            <div className="provider-badge-check">✓</div>
+                        </div>
+
+                        <div className="provider-card" data-provider="Other Wallet">
+                            <div className="provider-logo-wrap other-wrap">
+                                <img
+                                    src="images/wallets/other.svg"
+                                    alt="Other Wallet"
+                                    width="24"
+                                    height="24"
+                                    className="provider-logo-img"
+                                />
+                            </div>
+                            <span className="provider-name">Other</span>
+                            <div className="provider-badge-check">✓</div>
+                        </div>
+                    </div>
+
+                    <form
+                        id="withdraw-submission-form"
+                        style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '10px' }}
+                    >
+                        <div className="form-group">
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                                <label className="form-label" style={{ marginBottom: 0 }}>TRON (TRC20) Destination Address</label>
+                                <button type="button" id="btn-paste-withdraw-addr" className="input-action-link">Paste</button>
+                            </div>
+                            <input
+                                type="text"
+                                className="form-input"
+                                id="withdraw-address-input"
+                                placeholder="Enter TRC20 address (starts with T...)"
+                                required
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                                <label className="form-label" style={{ marginBottom: 0 }}>Withdrawal Amount (TRX)</label>
+                                <button
+                                    type="button"
+                                    id="btn-max-withdraw"
+                                    className="input-action-link"
+                                    style={{ color: 'var(--trx-red)', fontWeight: 800 }}
+                                >
+                                    MAX
+                                </button>
+                            </div>
+                            <div className="input-with-symbol">
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    min="1"
+                                    className="form-input"
+                                    id="withdraw-amount-input"
+                                    placeholder="Min. 1 TRX"
+                                    required
+                                />
+                                <span className="input-suffix-symbol">TRX</span>
+                            </div>
+                        </div>
+
+                        {/* Highlights & Policies */}
+                        <div className="withdraw-specs-grid">
+                            <div className="spec-pill">
+                                <span className="spec-k">Min. Withdraw:</span>
+                                <span className="spec-v">1.0 TRX</span>
+                            </div>
+                            <div className="spec-pill spec-highlight">
+                                <span className="spec-k">Network Fee:</span>
+                                <span className="spec-v green-val">0.00 TRX (Free)</span>
+                            </div>
+                        </div>
+
+                        <div className="withdraw-notes-box">
+                            <span>• Only <strong>claimed mining rewards</strong> can be withdrawn.</span>
+                            <span>• Deposited balances are dedicated for mining rig contracts.</span>
+                            <span>• Admin review ensures safe &amp; fast payment dispatch.</span>
+                        </div>
+
+                        <button
+                            type="submit"
+                            className="btn-submit-action"
+                            id="btn-submit-withdraw-action"
+                            style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                        >
+                            <svg
+                                width="18"
+                                height="18"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2.5"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                            >
+                                <line x1="7" y1="17" x2="17" y2="7" />
+                                <polyline points="7 7 17 7 17 17" />
+                            </svg>
+                            <span id="btn-withdraw-label">Submit Withdrawal</span>
+                        </button>
+                    </form>
+                </div>
+
+                {/* VIEW 2: TELEGRAM EMOJI ANIMATION & SUCCESS CARD */}
+                <div style={{ display: 'none' }}>
+                    <div className="tg-emoji-celebration-container">
+                        <div className="tg-flying-particle p1">💸</div>
+                        <div className="tg-flying-particle p2">💰</div>
+                        <div className="tg-flying-particle p3">🪙</div>
+                        <div className="tg-flying-particle p4">✨</div>
+                        <div className="tg-flying-particle p5">💵</div>
+                        <div className="tg-main-money-emoji">💸</div>
+                    </div>
+
+                    <div className="withdraw-success-content">
+                        <div className="status-pill-pulse pending">
+                            <span className="pulse-dot"></span>
+                            <span>Status: Pending Approval</span>
+                        </div>
+
+                        <h4 className="withdraw-success-title">Withdrawal Request Submitted!</h4>
+                        <p className="withdraw-success-desc">
+                            Your withdrawal has been registered and is pending administrator confirmation.
+                        </p>
+
+                        <div className="withdraw-receipt-card">
+                            <div className="receipt-row">
+                                <span>Amount</span>
+                                <strong className="receipt-amount" id="success-receipt-amount">0.00 TRX</strong>
+                            </div>
+                            <div className="receipt-row">
+                                <span>Destination</span>
+                                <strong id="success-receipt-provider">Binance</strong>
+                            </div>
+                            <div className="receipt-row">
+                                <span>Address</span>
+                                <span className="receipt-addr" id="success-receipt-address">T...</span>
+                            </div>
+                            <div className="receipt-row">
+                                <span>Network Fee</span>
+                                <strong style={{ color: '#00e599' }}>0.00 TRX (Free)</strong>
+                            </div>
+                        </div>
+
+                        <div className="withdraw-success-actions">
+                            <button
+                                type="button"
+                                className="btn-secondary-action"
+                            >
+                                <svg
+                                    width="15"
+                                    height="15"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                >
+                                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                                </svg>
+                                <span>Notifications (1)</span>
+                            </button>
+                            <button
+                                type="button"
+                                className="btn-submit-action"
+                            >
+                                <span>View in History</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </Modal>
         </AppLayout>
     );
 }
