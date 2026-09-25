@@ -22,7 +22,8 @@ return new class extends Migration
             $table->string('photo_url')->nullable();
             $table->decimal('balance', 20, 8)->default(0);
             $table->decimal('wallet_balance', 20, 8)->default(0);
-            $table->decimal('earning', 20, 8)->default(0);
+            $table->decimal('mined', 20, 8)->default(0)->command('tot_mined');
+            $table->decimal('earning', 20, 8)->default(0)->command('reff_earning');
             $table->string('referral_code', 20)->unique()->nullable();
             $table->unsignedBigInteger('referred_by')->nullable();
             $table->string('payout_address')->unique()->nullable();

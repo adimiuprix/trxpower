@@ -18,13 +18,11 @@ export default function ProfilePage() {
     const [isSaving, setIsSaving] = useState(false)
     const [activeTab, setActiveTab] = useState<'all' | 'deposit' | 'withdraw' | 'mining'>('all')
 
-    // Ambil transaksi dari dbUser
-    const allTransactions = dbUser?.transactions ?? [];
+    // 
+    const withdrawable = dbUser?.wallet_balance
 
-    // Filter transaksi berdasarkan tab yang aktif
-    const filteredTransactions = activeTab === 'all'
-        ? allTransactions
-        : allTransactions.filter(tx => tx.type === activeTab);
+    // ambil transactions dari dbUser lalu filter
+    const filteredTransactions = (dbUser?.transactions ?? []).filter(tx => activeTab === 'all' || tx.type === activeTab);
 
     // Handler untuk ganti tab dengan haptic feedback
     const handleTabChange = (tab: 'all' | 'deposit' | 'withdraw' | 'mining') => {
@@ -33,18 +31,12 @@ export default function ProfilePage() {
     };
 
     // Function untuk mendapatkan title transaksi
-    const getTransactionTitle = (type: string, amount: string) => {
-        switch (type) {
-            case 'mining':
-                return `Claimed mining yield (${amount} TRX) from active mining rigs`;
-            case 'deposit':
-                return 'Deposit to mining balance via TRC20 transfer';
-            case 'withdraw':
-                return 'Withdrawal request to TRON wallet';
-            default:
-                return 'Transaction';
-        }
-    };
+    const getTransactionTitle = (type: string, amount: string) =>
+    ({
+        mining: `Claimed mining yield (${amount} TRX) from active mining rigs`,
+        deposit: 'Deposit to mining balance via TRC20 transfer',
+        withdraw: 'Withdrawal request to TRON wallet',
+    })[type] ?? 'Transaction';
 
     // Function untuk render icon berdasarkan tipe transaksi
     const renderTransactionIcon = (type: string) => {
@@ -268,8 +260,7 @@ export default function ProfilePage() {
                         </div>
                         <div>
                             <span className="profile-stat-label">Deposit Balance</span>
-
-                            <div className="profile-stat-val" id="profile-deposited">0.00 TRX</div>
+                            <div className="profile-stat-val">0.00 TRX</div>
                             <span className="profile-stat-sub">For mining activation</span>
                         </div>
                     </div>
@@ -295,7 +286,7 @@ export default function ProfilePage() {
                         </div>
                         <div>
                             <span className="profile-stat-label">Withdrawable Balance</span>
-                            <div className="profile-stat-val" id="profile-withdrawable" style={{ color: 'var(--trx-red)' }}>0.1875 TRX</div>
+                            <div className="profile-stat-val" style={{ color: 'var(--trx-red)' }}>{Number(withdrawable).toFixed(4)} TRX</div>
                             <span className="profile-stat-sub">Ready for payout</span>
                         </div>
                     </div>
@@ -320,7 +311,7 @@ export default function ProfilePage() {
                         </div>
                         <div>
                             <span className="profile-stat-label">Total Withdrawn</span>
-                            <div className="profile-stat-val" id="profile-withdrawn">0.00 TRX</div>
+                            <div className="profile-stat-val">0.00 TRX</div>
                             <span className="profile-stat-sub">Paid out to wallet</span>
                         </div>
                     </div>
@@ -346,7 +337,7 @@ export default function ProfilePage() {
                         </div>
                         <div>
                             <span className="profile-stat-label">Total Mined</span>
-                            <div className="profile-stat-val" id="profile-total-mined">0.1875 TRX</div>
+                            <div className="profile-stat-val">0.1875 TRX</div>
                             <span className="profile-stat-sub">Lifetime passive rewards</span>
                         </div>
                     </div>
