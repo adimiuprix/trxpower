@@ -19,7 +19,7 @@ return new class extends Migration
             $table->decimal('daily_profit', 20, 8);
             $table->decimal('daily_roi_percent', 8, 2);
             $table->unsignedInteger('duration');
-            $table->string('hashrate');
+            $table->integer('hashrate');
             $table->string('badge_text')->nullable();
             $table->string('image_url')->nullable();
             $table->boolean('is_free');
