@@ -1,5 +1,7 @@
 import AppLayout from '@/layouts/AppLayout';
+import Modal from '@/components/Modal';
 import { useTelegramContext, useTelegramUser } from '@/providers/TelegramProvider';
+import { usePage } from '@inertiajs/react';
 import { createToaster } from "@codenhub/toaster";
 import { useEffect, useRef, useState } from 'react'
 
@@ -14,18 +16,25 @@ interface Transaction {
     amount: string;
     address: string | null;
     tx_hash: string | null;
+    tx_hash_full?: string | null;
     status: 'pending' | 'completed' | 'failed';
     created_at: string;
+}
+
+interface PageProps {
+    transactions: {
+        data: Transaction[];
+    };
 }
 
 export default function HomePage() {
     const user = useTelegramUser();
     const { dbUser, haptic, refreshDbUser } = useTelegramContext();
+    const { transactions } = usePage<PageProps>().props;
 
     // Balance dari database
     const serverBalance = dbUser?.balance ?? 0;
     const miningHistories = dbUser?.mining_histories ?? [];
-    const transactions = dbUser?.transactions ?? [];
 
     // Real-time mining balance state
     const [liveBalance, setLiveBalance] = useState<number>(serverBalance);
@@ -203,7 +212,6 @@ export default function HomePage() {
                         {/* LIVE TRON MINING REACTOR SYSTEM */}
                         <div
                             className="card-mining-system"
-                            id="card-mining-system"
                             title="Active TRX Cloud Mining Node"
                         >
                             {/* Ambient Energy Halo */}
@@ -216,7 +224,7 @@ export default function HomePage() {
                             </div>
                             <div className="reactor-orbit-ring inner-orbit"></div>
 
-                            {/* Central Official TRON (TRX) Logo Core */}
+                            {/* Central Official TRON (TRX) */}
                             <div className="tron-official-core">
                                 <svg
                                     className="tron-official-svg"
@@ -634,12 +642,12 @@ export default function HomePage() {
 
                         {/* Dynamic List of Transactions */}
                         <div className="tx-items-list">
-                            {transactions?.length === 0 && (
+                            {transactions?.data?.length === 0 && (
                                 <div className="tx-item" style={{ justifyContent: 'center', opacity: 0.5 }}>
                                     <span>No transactions yet</span>
                                 </div>
                             )}
-                            {transactions?.map((tx) => (
+                            {transactions?.data?.map((tx) => (
                                 <div
                                     key={tx.id}
                                     className={`tx-item tx-item-pop-in ${tx.type}`}
@@ -667,8 +675,8 @@ export default function HomePage() {
                                             {tx.tx_hash && (
                                                 <div
                                                     className="tx-hash-badge"
-                                                    title={`TronScan TX: ${tx.tx_hash}`}
-                                                    onClick={() => navigator.clipboard?.writeText(tx.tx_hash!)}
+                                                    title={`TronScan TX: ${tx.tx_hash_full || tx.tx_hash}`}
+                                                    onClick={() => navigator.clipboard?.writeText(tx.tx_hash_full || tx.tx_hash!)}
                                                     style={{ cursor: 'pointer' }}
                                                 >
                                                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
