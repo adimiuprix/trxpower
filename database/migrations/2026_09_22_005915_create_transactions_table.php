@@ -22,7 +22,7 @@ return new class extends Migration
             $table->timestamp('completed_at')->nullable();
             $table->timestamps();
             
-            $table->index(['telegram_user_id', 'created_at']);
+            $table->index(['user_id', 'created_at']);
         });
     }
 

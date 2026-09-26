@@ -16,7 +16,7 @@ class Transaction extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-        'telegram_user_id',
+        'user_id',
         'type',
         'amount',
         'address',
@@ -40,7 +40,7 @@ class Transaction extends Model
      */
     public function user(): BelongsTo
     {
-        return $this->belongsTo(TelegramUser::class, 'telegram_user_id');
+        return $this->belongsTo(TelegramUser::class, 'user_id');
     }
 
     /**
@@ -64,6 +64,6 @@ class Transaction extends Model
      */
     public function scopeForUser($query, int $telegramUserId)
     {
-        return $query->where('telegram_user_id', $telegramUserId);
+        return $query->where('user_id', $telegramUserId);
     }
 }
