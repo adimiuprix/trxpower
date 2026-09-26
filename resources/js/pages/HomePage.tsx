@@ -1,7 +1,7 @@
 import AppLayout from '@/layouts/AppLayout';
 import Modal from '@/components/Modal';
 import { useTelegramContext, useTelegramUser } from '@/providers/TelegramProvider';
-import { usePage } from '@inertiajs/react';
+import { usePage, router } from '@inertiajs/react';
 import { createToaster } from "@codenhub/toaster";
 import { useEffect, useRef, useState } from 'react'
 
@@ -141,7 +141,6 @@ export default function HomePage() {
     return (
         <AppLayout>
             <section
-                id="view-home"
                 className="view-container"
                 style={{ display: 'flex' }}
             >
@@ -343,8 +342,11 @@ export default function HomePage() {
                     {/* Deposit Button (Opens Full Page Deposit) */}
                     <button
                         type="button"
+                        onClick={(e) => {
+                            e.preventDefault();
+                            router.visit('/deposit');
+                        }}
                         className="action-btn btn-deposit"
-                        id="btn-home-deposit"
                     >
                         <div className="action-btn-left">
                             <div className="action-btn-icon">

@@ -19,6 +19,7 @@ use App\Http\Controllers\TelegramProfileController;
 // Inertia Pages
 Route::get('/', [TelegramHomeController::class, 'index'])->name('home');
 Route::get('/mine', [TelegramMineController::class, 'index'])->name('mine');
+Route::inertia('/mining-active', 'MiningActivePage')->name('mining-active');
 Route::inertia('/referral', 'ReferralPage')->name('referral');
 Route::get('/profile', [TelegramProfileController::class, 'index'])->name('profile');
 Route::inertia('/deposit', 'DepositPage')->name('deposit');
