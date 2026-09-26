@@ -30,6 +30,7 @@
         "@tailwindcss/vite": "^4.1.11",
         "@tma.js/sdk": "^3.3.0",
         "@tma.js/sdk-react": "^3.0.23",
+        "@trtmn/qrcody": "^1.17.0",
         "@types/react": "^19.2.0",
         "@types/react-dom": "^19.2.0",
         "@vitejs/plugin-react": "^6.1.1",
