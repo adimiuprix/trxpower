@@ -9,25 +9,24 @@ const toaster = createToaster({
     duration: 3000,
 });
 
-interface Props {
-    depositAddress: string;
+interface DepositPreset {
+    value: number;
+    label: string;
+    subLabel: string;
 }
 
-export default function DepositPage({ depositAddress }: Props) {
+interface Props {
+    depositAddress: string;
+    depositPreset: DepositPreset[];
+}
+
+export default function DepositPage({ depositAddress, depositPreset }: Props) {
     const [copySuccess, setCopySuccess] = useState(false);
     const [qrCodeSVG, setQrCodeSVG] = useState<string>('');
     const [copyExactSuccess, setCopyExactSuccess] = useState(false);
 
-    // Amount presets data
-    const amountPresets = [
-        { value: 3, label: '$3', subLabel: '3 USDT' },
-        { value: 5, label: '$5', subLabel: '5 USDT' },
-        { value: 10, label: '$10', subLabel: '10 USDT' },
-        { value: 15, label: '$15', subLabel: '15 USDT' },
-        { value: 20, label: '$20', subLabel: '20 USDT' },
-        { value: 50, label: '$50', subLabel: '50 USDT' },
-        { value: 100, label: '$100', subLabel: '100 USDT' },
-    ];
+    // Amount presets data from backend
+    const amountPresets = depositPreset;
 
     // Set default to first preset
     const [selectedAmount, setSelectedAmount] = useState(amountPresets[0].value);
@@ -51,7 +50,7 @@ export default function DepositPage({ depositAddress }: Props) {
         
         // Check if custom amount matches any preset
         const numericValue = parseFloat(value);
-        const matchingPreset = amountPresets.find(preset => preset.value === numericValue);
+        const matchingPreset = depositPreset.find(preset => preset.value === numericValue);
         
         if (matchingPreset) {
             // If matches a preset, set it as selected
@@ -255,7 +254,7 @@ export default function DepositPage({ depositAddress }: Props) {
                         <span className="deposit-min-tag">Min. $3</span>
                     </div>
                     <div className="amount-presets-grid">
-                        {amountPresets.map((preset) => (
+                        {depositPreset.map((preset) => (
                             <button
                                 key={preset.value}
                                 type="button"
@@ -275,7 +274,7 @@ export default function DepositPage({ depositAddress }: Props) {
                         <input
                             type="number"
                             step="1"
-                            min={amountPresets[0].value}
+                            min={depositPreset[0].value}
                             className="custom-amount-input"
                             placeholder="Amount"
                             value={customAmount}
