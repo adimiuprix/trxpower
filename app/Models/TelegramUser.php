@@ -165,9 +165,63 @@ class TelegramUser extends Model
     {
         $currentTime = time();
         
-        $expiredCount = $this->miningHistories()
+        $this->miningHistories()
             ->active()
             ->where('expire_date', '<=', $currentTime)
             ->update(['status' => 'inactive']);
+    }
+
+    public function totalWithdraw()
+    {
+        return $this->transactions()
+            ->withdrawals()
+            ->completed()
+            ->sum('amount');
+    }
+
+    /**
+     * Get total deposit (completed only)
+     */
+    public function totalDeposit()
+    {
+        return $this->transactions()
+            ->deposits()
+            ->completed()
+            ->sum('amount');
+    }
+
+    /**
+     * Get total mining rewards (completed only)
+     */
+    public function totalMiningRewards()
+    {
+        return $this->transactions()
+            ->mining()
+            ->completed()
+            ->sum('amount');
+    }
+
+    /**
+     * Get pending withdraw amount
+     */
+    public function pendingWithdraw()
+    {
+        return $this->transactions()
+            ->withdrawals()
+            ->pending()
+            ->sum('amount');
+    }
+
+    /**
+     * Get all transaction statistics
+     */
+    public function getTransactionStats(): array
+    {
+        return [
+            'total_withdraw' => (float) $this->totalWithdraw(),
+            'total_deposit' => (float) $this->totalDeposit(),
+            'total_mining' => (float) $this->totalMiningRewards(),
+            'pending_withdraw' => (float) $this->pendingWithdraw(),
+        ];
     }
 }

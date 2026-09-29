@@ -53,6 +53,7 @@ export interface DbUser {
     mining_histories?: MiningHistory[];
     transactions?: Transaction[];
     total_hashrate?: string;
+    total_withdraw?: number;
 }
 
 export interface AuthResponse {

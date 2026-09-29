@@ -60,6 +60,30 @@ class Transaction extends Model
     }
 
     /**
+     * Scope for withdrawal transactions only
+     */
+    public function scopeWithdrawals($query)
+    {
+        return $query->where('type', 'withdraw');
+    }
+
+    /**
+     * Scope for deposit transactions only
+     */
+    public function scopeDeposits($query)
+    {
+        return $query->where('type', 'deposit');
+    }
+
+    /**
+     * Scope for mining reward transactions only
+     */
+    public function scopeMining($query)
+    {
+        return $query->where('type', 'mining');
+    }
+
+    /**
      * Scope for specific user
      */
     public function scopeForUser($query, int $telegramUserId)

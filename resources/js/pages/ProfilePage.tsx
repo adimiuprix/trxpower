@@ -22,7 +22,7 @@ export default function ProfilePage() {
     const depositBalance = dbUser?.deposit_balance
     const withdrawable = dbUser?.wallet_balance
     const totalMining = dbUser?.mined
-
+    const totalWithdraw = dbUser?.total_withdraw
 
     // ambil transactions dari dbUser lalu filter
     const filteredTransactions = (dbUser?.transactions ?? []).filter(tx => activeTab === 'all' || tx.type === activeTab);
@@ -314,7 +314,7 @@ export default function ProfilePage() {
                         </div>
                         <div>
                             <span className="profile-stat-label">Total Withdrawn</span>
-                            <div className="profile-stat-val">0.00 TRX</div>
+                            <div className="profile-stat-val">{Number(totalWithdraw).toFixed(4)} TRX</div>
                             <span className="profile-stat-sub">Paid out to wallet</span>
                         </div>
                     </div>
