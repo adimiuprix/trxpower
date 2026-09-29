@@ -29,6 +29,7 @@ class TelegramUser extends Model
         'last_active_at',
         'balance',
         'wallet_balance',
+        'deposit_balance',
         'mined',
         'payout_address',
         'earning',
@@ -60,36 +61,37 @@ class TelegramUser extends Model
      */
     public static function createOrUpdateFromTelegram(array $userData): self
     {
-        $existing = static::where('telegram_id', $userData['id'])->first();
-
-        if ($existing) {
-            // Update hanya profil, JANGAN overwrite balance
-            $existing->update([
-                'first_name'    => $userData['firstName'],
-                'last_name'     => $userData['lastName'] ?? null,
-                'username'      => $userData['username'] ?? null,
-                'language_code' => $userData['languageCode'] ?? null,
-                'is_premium'    => $userData['isPremium'] ?? false,
-                'photo_url'     => $userData['photoUrl'] ?? null,
+        // Use updateOrCreate untuk handle race condition dengan atomic operation
+        $user = static::updateOrCreate(
+            ['telegram_id' => $userData['id']], // Unique key untuk find
+            [
+                // Data yang akan di-update (atau diset saat create)
+                'first_name'     => $userData['firstName'],
+                'last_name'      => $userData['lastName'] ?? null,
+                'username'       => $userData['username'] ?? null,
+                'language_code'  => $userData['languageCode'] ?? null,
+                'is_premium'     => $userData['isPremium'] ?? false,
+                'photo_url'      => $userData['photoUrl'] ?? null,
                 'last_active_at' => now(),
+            ]
+        );
+
+        // Generate referral code hanya untuk user baru
+        if ($user->wasRecentlyCreated && empty($user->referral_code)) {
+            $user->update([
+                'referral_code' => static::generateReferralCode(),
             ]);
-            return $existing;
         }
 
-        // User baru: buat dengan balance awal 0 dan referral code otomatis
-        return static::create([
-            'telegram_id'    => $userData['id'],
-            'first_name'     => $userData['firstName'],
-            'last_name'      => $userData['lastName'] ?? null,
-            'username'       => $userData['username'] ?? null,
-            'referral_code'  => static::generateReferralCode(), // Auto-generate
-            'language_code'  => $userData['languageCode'] ?? null,
-            'is_premium'     => $userData['isPremium'] ?? false,
-            'photo_url'      => $userData['photoUrl'] ?? null,
-            'last_active_at' => now(),
-            'balance'        => 0,
-            'wallet_balance' => 0,
-        ]);
+        // Set default balance untuk user baru (jika belum ada)
+        if ($user->wasRecentlyCreated) {
+            $user->update([
+                'balance' => $user->balance ?? 0,
+                'wallet_balance' => $user->wallet_balance ?? 0,
+            ]);
+        }
+
+        return $user->fresh(); // Refresh untuk get latest data
     }
 
     /**

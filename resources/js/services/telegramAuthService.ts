@@ -41,9 +41,11 @@ export interface DbUser {
     language_code: string | null; 
     is_premium: boolean; 
     photo_url: string | null; 
-    balance: number; 
+    balance: number;
+    mined: number; 
     earning: number;
     wallet_balance: number; 
+    deposit_balance: number;
     referral_code: string;
     referral_total: number;
     referrals: Referrals[];

@@ -181,6 +181,7 @@ class TelegramAuthController extends Controller
                     'balance' => (float) $user->balance,
                     'mined' => (float) $user->mined,
                     'wallet_balance' => (float) $user->wallet_balance,
+                    'deposit_balance' => (float) $user->deposit_balance,
                     'referral_code' => $user->referral_code,
                     'referral_total' => $user->referrals()->count(),
                     'referrals' => $user->referrals,

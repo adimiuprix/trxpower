@@ -18,8 +18,11 @@ export default function ProfilePage() {
     const [isSaving, setIsSaving] = useState(false)
     const [activeTab, setActiveTab] = useState<'all' | 'deposit' | 'withdraw' | 'mining'>('all')
 
-    // 
+    // Financial statistics
+    const depositBalance = dbUser?.deposit_balance
     const withdrawable = dbUser?.wallet_balance
+    const totalMining = dbUser?.mined
+
 
     // ambil transactions dari dbUser lalu filter
     const filteredTransactions = (dbUser?.transactions ?? []).filter(tx => activeTab === 'all' || tx.type === activeTab);
@@ -260,7 +263,7 @@ export default function ProfilePage() {
                         </div>
                         <div>
                             <span className="profile-stat-label">Deposit Balance</span>
-                            <div className="profile-stat-val">0.00 TRX</div>
+                            <div className="profile-stat-val">{Number(depositBalance).toFixed(4)} TRX</div>
                             <span className="profile-stat-sub">For mining activation</span>
                         </div>
                     </div>
@@ -337,7 +340,7 @@ export default function ProfilePage() {
                         </div>
                         <div>
                             <span className="profile-stat-label">Total Mined</span>
-                            <div className="profile-stat-val">0.1875 TRX</div>
+                            <div className="profile-stat-val">{Number(totalMining).toFixed(4)} TRX</div>
                             <span className="profile-stat-sub">Lifetime passive rewards</span>
                         </div>
                     </div>
