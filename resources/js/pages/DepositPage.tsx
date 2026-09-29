@@ -9,10 +9,63 @@ const toaster = createToaster({
     duration: 3000,
 });
 
-export default function DepositPage() {
-    const [depositAddress] = useState('0x65CD568D7068F20de91547E80A1A7212226AFFTD');
+interface Props {
+    depositAddress: string;
+}
+
+export default function DepositPage({ depositAddress }: Props) {
     const [copySuccess, setCopySuccess] = useState(false);
     const [qrCodeSVG, setQrCodeSVG] = useState<string>('');
+    const [copyExactSuccess, setCopyExactSuccess] = useState(false);
+
+    // Amount presets data
+    const amountPresets = [
+        { value: 3, label: '$3', subLabel: '3 USDT' },
+        { value: 5, label: '$5', subLabel: '5 USDT' },
+        { value: 10, label: '$10', subLabel: '10 USDT' },
+        { value: 15, label: '$15', subLabel: '15 USDT' },
+        { value: 20, label: '$20', subLabel: '20 USDT' },
+        { value: 50, label: '$50', subLabel: '50 USDT' },
+        { value: 100, label: '$100', subLabel: '100 USDT' },
+    ];
+
+    // Set default to first preset
+    const [selectedAmount, setSelectedAmount] = useState(amountPresets[0].value);
+    const [customAmount, setCustomAmount] = useState(String(amountPresets[0].value));
+
+    // Exchange rate: 1 USDT = 3 TRX
+    const exchangeRate = 3;
+    
+    // Determine active amount (custom or preset)
+    const activeAmount = customAmount ? parseFloat(customAmount) || 0 : selectedAmount;
+    
+    // Calculate exact amount (add 0.5% for transaction identification)
+    const exactAmount = (activeAmount * 1.005).toFixed(3);
+    
+    // Calculate TRX to receive (based on selected amount, not exact amount)
+    const trxToReceive = (activeAmount * exchangeRate).toFixed(2);
+
+    const handleCustomAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        setCustomAmount(value);
+        
+        // Check if custom amount matches any preset
+        const numericValue = parseFloat(value);
+        const matchingPreset = amountPresets.find(preset => preset.value === numericValue);
+        
+        if (matchingPreset) {
+            // If matches a preset, set it as selected
+            setSelectedAmount(matchingPreset.value);
+        } else {
+            // If custom value, deselect all presets
+            setSelectedAmount(0);
+        }
+    };
+
+    const handlePresetClick = (value: number) => {
+        setSelectedAmount(value);
+        setCustomAmount(String(value)); // Update custom input to match preset
+    };
 
     // Generate QR Code
     useEffect(() => {
@@ -47,6 +100,18 @@ export default function DepositPage() {
         } catch (err) {
             console.error('Failed to copy:', err);
             toaster.semantic.error('Failed to copy address. Please try again.');
+        }
+    };
+
+    const handleCopyExactAmount = async () => {
+        try {
+            await navigator.clipboard.writeText(exactAmount);
+            setCopyExactSuccess(true);
+            toaster.semantic.success('Exact amount copied to clipboard!');
+            setTimeout(() => setCopyExactSuccess(false), 2000);
+        } catch (err) {
+            console.error('Failed to copy:', err);
+            toaster.semantic.error('Failed to copy amount. Please try again.');
         }
     };
 
@@ -181,7 +246,7 @@ export default function DepositPage() {
                     </div>
                 </div>
 
-                {/* 4. Amount Selection Presets (3, 5, 10, 15, 20, 50, 100) */}
+                {/* 4. Amount Selection Presets */}
                 <div className="deposit-amount-section">
                     <div className="deposit-section-label-row">
                         <span className="deposit-field-label">
@@ -190,62 +255,18 @@ export default function DepositPage() {
                         <span className="deposit-min-tag">Min. $3</span>
                     </div>
                     <div className="amount-presets-grid">
-                        <button
-                            type="button"
-                            className="amount-preset-chip active"
-                            data-amount="3"
-                        >
-                            <span className="chip-val">$3</span>
-                            <span className="chip-sub">3 USDT</span>
-                        </button>
-                        <button
-                            type="button"
-                            className="amount-preset-chip"
-                            data-amount="5"
-                        >
-                            <span className="chip-val">$5</span>
-                            <span className="chip-sub">5 USDT</span>
-                        </button>
-                        <button
-                            type="button"
-                            className="amount-preset-chip"
-                            data-amount="10"
-                        >
-                            <span className="chip-val">$10</span>
-                            <span className="chip-sub">10 USDT</span>
-                        </button>
-                        <button
-                            type="button"
-                            className="amount-preset-chip"
-                            data-amount="15"
-                        >
-                            <span className="chip-val">$15</span>
-                            <span className="chip-sub">15 USDT</span>
-                        </button>
-                        <button
-                            type="button"
-                            className="amount-preset-chip"
-                            data-amount="20"
-                        >
-                            <span className="chip-val">$20</span>
-                            <span className="chip-sub">20 USDT</span>
-                        </button>
-                        <button
-                            type="button"
-                            className="amount-preset-chip"
-                            data-amount="50"
-                        >
-                            <span className="chip-val">$50</span>
-                            <span className="chip-sub">50 USDT</span>
-                        </button>
-                        <button
-                            type="button"
-                            className="amount-preset-chip"
-                            data-amount="100"
-                        >
-                            <span className="chip-val">$100</span>
-                            <span className="chip-sub">100 USDT</span>
-                        </button>
+                        {amountPresets.map((preset) => (
+                            <button
+                                key={preset.value}
+                                type="button"
+                                className={`amount-preset-chip ${selectedAmount === preset.value ? 'active' : ''}`}
+                                data-amount={preset.value}
+                                onClick={() => handlePresetClick(preset.value)}
+                            >
+                                <span className="chip-val">{preset.label}</span>
+                                <span className="chip-sub">{preset.subLabel}</span>
+                            </button>
+                        ))}
                     </div>
 
                     {/* Custom Amount Input */}
@@ -254,15 +275,17 @@ export default function DepositPage() {
                         <input
                             type="number"
                             step="1"
-                            min="3"
+                            min={amountPresets[0].value}
                             className="custom-amount-input"
                             placeholder="Amount"
+                            value={customAmount}
+                            onChange={handleCustomAmountChange}
                         />
                         <span className="custom-amount-suffix">USDT</span>
                     </div>
                 </div>
 
-                {/* 5. Exact Amount to Send Box (e.g. 3.015 USDT) */}
+                {/* 5. Exact Amount to Send Box */}
                 <div className="exact-amount-card">
                     <div className="exact-amount-badge-row">
                         <span className="exact-badge">
@@ -289,7 +312,7 @@ export default function DepositPage() {
                         <span className="exact-receive-badge">
                             You Get:{' '}
                             <strong>
-                                +9.00 TRX
+                                +{trxToReceive} TRX
                             </strong>
                         </span>
                     </div>
@@ -298,14 +321,18 @@ export default function DepositPage() {
                             <span
                                 className="exact-amount-val"
                             >
-                                3.015 USDT
+                                {exactAmount} USDT
                             </span>
                             <span className="exact-amount-sub">
                                 Send this exact amount to identify your
                                 transaction
                             </span>
                         </div>
-                        <button type="button" className="btn-copy-exact">
+                        <button 
+                            type="button" 
+                            className="btn-copy-exact"
+                            onClick={handleCopyExactAmount}
+                        >
                             <svg
                                 width="15"
                                 height="15"
@@ -314,22 +341,28 @@ export default function DepositPage() {
                                 stroke="currentColor"
                                 strokeWidth="2.2"
                             >
-                                <rect
-                                    x="9"
-                                    y="9"
-                                    width="13"
-                                    height="13"
-                                    rx="2"
-                                    ry="2"
-                                ></rect>
-                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                {copyExactSuccess ? (
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                ) : (
+                                    <>
+                                        <rect
+                                            x="9"
+                                            y="9"
+                                            width="13"
+                                            height="13"
+                                            rx="2"
+                                            ry="2"
+                                        ></rect>
+                                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                    </>
+                                )}
                             </svg>
-                            <span>Copy</span>
+                            <span>{copyExactSuccess ? 'Copied!' : 'Copy'}</span>
                         </button>
                     </div>
                 </div>
 
-                {/* 6. Must-Be Notice: Minimum $3 */}
+                {/* 6. Must-Be Notice */}
                 <div className="deposit-notice-card">
                     <div className="notice-icon">
                         <svg

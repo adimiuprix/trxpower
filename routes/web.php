@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TelegramHomeController;
 use App\Http\Controllers\TelegramMineController;
 use App\Http\Controllers\TelegramProfileController;
+use App\Http\Controllers\TelegramDepositController;
 
 /*
 |--------------------------------------------------------------------------
@@ -22,7 +23,7 @@ Route::get('/mine', [TelegramMineController::class, 'index'])->name('mine');
 Route::inertia('/mining-active', 'MiningActivePage')->name('mining-active');
 Route::inertia('/referral', 'ReferralPage')->name('referral');
 Route::get('/profile', [TelegramProfileController::class, 'index'])->name('profile');
-Route::inertia('/deposit', 'DepositPage')->name('deposit');
+Route::get('/deposit', [TelegramDepositController::class, 'index'])->name('deposit');
 
 // Telegram Mini App Demo & Example
 Route::inertia('/telegram-demo', 'TelegramDemo')->name('telegram.demo');
