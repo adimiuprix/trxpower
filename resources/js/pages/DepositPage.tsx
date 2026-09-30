@@ -16,11 +16,12 @@ interface DepositPreset {
 }
 
 interface Props {
+    exchangeRate: number;
     depositAddress: string;
     depositPreset: DepositPreset[];
 }
 
-export default function DepositPage({ depositAddress, depositPreset }: Props) {
+export default function DepositPage({ depositAddress, depositPreset, exchangeRate }: Props) {
     const [copySuccess, setCopySuccess] = useState(false);
     const [qrCodeSVG, setQrCodeSVG] = useState<string>('');
     const [copyExactSuccess, setCopyExactSuccess] = useState(false);
@@ -31,9 +32,6 @@ export default function DepositPage({ depositAddress, depositPreset }: Props) {
     // Set default to first preset
     const [selectedAmount, setSelectedAmount] = useState(amountPresets[0].value);
     const [customAmount, setCustomAmount] = useState(String(amountPresets[0].value));
-
-    // Exchange rate: 1 USDT = 3 TRX
-    const exchangeRate = 3;
     
     // Determine active amount (custom or preset)
     const activeAmount = customAmount ? parseFloat(customAmount) || 0 : selectedAmount;

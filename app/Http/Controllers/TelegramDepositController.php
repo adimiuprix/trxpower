@@ -12,6 +12,7 @@ class TelegramDepositController extends Controller
         $depositAddress = "0x65CD568D7068F20de91547E80A1A7212226AFGGG";
 
         return Inertia::render('DepositPage', [
+            'exchangeRate' => 3,
             'depositAddress' => $depositAddress,
             'depositPreset' => [
                 ['value' => 3, 'label' => '$3', 'subLabel' => '3 USDT'],
