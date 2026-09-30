@@ -1,6 +1,14 @@
 import AppLayout from '@/layouts/AppLayout';
+import { router } from '@inertiajs/react';
+import { useTelegramContext, useTelegramUser } from '@/providers/TelegramProvider';
 import Modal from '@/components/Modal';
+import { createToaster } from "@codenhub/toaster";
 import { useState } from 'react'
+
+const toaster = createToaster({
+    position: "top-center",
+    duration: 3000,
+});
 
 // Plan type matching backend response
 interface Plan {
@@ -21,7 +29,7 @@ interface MiningPageProps {
     plans: Plan[];
 }
 
-// Color map untuk button berdasarkan index
+// Color map for buttons based on index
 const planColors = ['red', 'blue', 'purple', 'orange', 'cyan', 'green'];
 const iconColors = ['#ef4444', '#3b82f6', '#8b5cf6', '#f97316', '#06b6d4', '#10b981'];
 
@@ -30,20 +38,70 @@ export default function MiningPage({ plans = [] }: MiningPageProps) {
     const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
     const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
 
-    // Handler untuk membuka modal dengan plan yang dipilih
+    // fetch data user for take deposit balance
+    const user = useTelegramUser();
+    const depositBalance = useTelegramContext().dbUser?.deposit_balance ?? 0;
+
+    // Handler to open the modal with the selected plan
     const handleActivatePlan = (plan: Plan) => {
         setSelectedPlan(plan);
         setIsPurchaseModalOpen(true);
     };
 
+    // Handler for purchasing plan
+    const handlePurchasePlan = async (planId: number | undefined) => {
+        if (!planId) {
+            toaster.semantic.error('Plan ID is required');
+            return;
+        }
+
+        try {
+            // take token from telegramAuthService
+            const token = localStorage.getItem('telegram_auth_token');
+
+            if (!token) {
+                toaster.semantic.error('Please login again to continue');
+                return;
+            }
+
+            // Send request to api
+            const response = await fetch('/api/telegram/mining-purchase', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    plan_id: planId
+                }),
+            });
+
+            const data = await response.json();
+            
+            // handle response
+            if (data.success) {
+                toaster.semantic.success(data.message || 'Mining plan purchased successfully! 🎉');
+                // Tutup modal setelah success
+                setIsPurchaseModalOpen(false);
+                setSelectedPlan(null);
+            } else {
+                toaster.semantic.error(data.message || 'Unable to purchase plan. Please try again.');
+            }
+
+        } catch (error) {
+            console.error('Error during purchase:', error);
+            toaster.semantic.error('Unable to connect to server. Please check your connection.');
+        }
+    };
+
     return (
         <AppLayout>
             <section
-                id="view-plans"
                 className="view-container"
                 style={{ display: 'flex' }}
             >
-                <div id="plans-list-container" className="mining-plans-grid">
+                <div className="mining-plans-grid">
                     {/* Dynamic Plans from Database */}
                     {plans.map((plan, index) => (
                         <div key={plan.id} className="mining-card-box">
@@ -214,7 +272,7 @@ export default function MiningPage({ plans = [] }: MiningPageProps) {
                         }}
                     >
                         <span style={{ color: 'var(--text-muted)' }}>Package</span>
-                        <strong id="purchase-plan-name">{selectedPlan?.name || '-'}</strong>
+                        <strong>{selectedPlan?.name || '-'}</strong>
                     </div>
                     <div
                         style={{
@@ -225,7 +283,7 @@ export default function MiningPage({ plans = [] }: MiningPageProps) {
                         }}
                     >
                         <span style={{ color: 'var(--text-muted)' }}>Price</span>
-                        <strong style={{ color: 'var(--trx-red)' }} id="purchase-plan-price">
+                        <strong style={{ color: 'var(--trx-red)' }}>
                             {selectedPlan ? `${selectedPlan.price} TRX` : '-'}
                         </strong>
                     </div>
@@ -238,7 +296,7 @@ export default function MiningPage({ plans = [] }: MiningPageProps) {
                         }}
                     >
                         <span style={{ color: 'var(--text-muted)' }}>Daily ROI</span>
-                        <strong style={{ color: '#00e599' }} id="purchase-plan-roi">
+                        <strong style={{ color: '#00e599' }}>
                             {selectedPlan ? `${selectedPlan.daily_roi_percent}% / day (${selectedPlan.duration} days)` : '-'}
                         </strong>
                     </div>
@@ -251,17 +309,38 @@ export default function MiningPage({ plans = [] }: MiningPageProps) {
                         }}
                     >
                         <span style={{ color: 'var(--text-muted)' }}>Estimated Profit</span>
-                        <strong style={{ color: '#00e599' }} id="purchase-plan-total">
+                        <strong style={{ color: '#00e599' }}>
                             {selectedPlan ? `+${selectedPlan.total_return} TRX` : '-'}
                         </strong>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0' }}>
                         <span style={{ color: 'var(--text-muted)' }}>Your Balance</span>
-                        <strong id="purchase-user-balance">0.0032 TRX</strong>
+                        <strong>{Number(depositBalance).toFixed(4)} TRX</strong>
                     </div>
                 </div>
-
-                <button className="btn-submit-action" id="btn-confirm-purchase">Insufficient Balance - Deposit TRX</button>
+                
+                {/* Conditional button based on balance */}
+                {selectedPlan && depositBalance < selectedPlan.price_raw ? (
+                    <button
+                        className="btn-submit-action"
+                        onClick={(e) => {
+                            e.preventDefault();
+                            router.visit('/deposit');
+                        }}
+                    >
+                        Insufficient Balance - Deposit TRX
+                    </button>
+                ) : (
+                    <button
+                        className="btn-submit-action"
+                        onClick={(e) => {
+                            e.preventDefault();
+                            handlePurchasePlan(selectedPlan?.id);
+                        }}
+                    >
+                        Buy Now
+                    </button>
+                )}
             </Modal>
 
         </AppLayout>

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\MiningHistory;
+use App\Models\Plan;
 use App\Models\TelegramUser;
 use App\Services\TelegramAuthService;
 use Illuminate\Http\JsonResponse;
@@ -248,6 +250,56 @@ class TelegramAuthController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to claim',
+            ], 500);
+        }
+    }
+
+    public function puchase(Request $request): JsonResponse
+    {
+        try{
+            // Get authenticated user from Sanctum
+            $user = $request->user('sanctum');
+
+            if (! $user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthenticated',
+                ], 401);
+            }
+
+            DB::transaction(function () use ($user, &$request) {
+                $user = TelegramUser::lockForUpdate()->find($user->id);
+                $plan = Plan::query()->lockForUpdate()->findOrFail($request->integer('plan_id'));
+                if ($user->deposit_balance < $plan->price) {
+                    throw ValidationException::withMessages([
+                        'balance' => 'Insufficient balance.',
+                    ]);
+                }
+                $user->decrement('deposit_balance', $plan->price);
+
+                Log::info(now()->addDays($plan->duration)->timestamp);
+
+                MiningHistory::create([
+                    'user_id'      => $user->id,
+                    'plan_id'      => $plan->id,
+                    'status'       => 'active',
+                    'last_sum'     => 0,
+                    'expire_date'   => now()->addDays($plan->duration)->timestamp,
+                ]);
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Plan purchased successfully.',
+            ]);
+        }catch (\Exception $e){
+            Log::error('Failed to get user data', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to purchase plan',
             ], 500);
         }
     }

@@ -2,7 +2,7 @@ import AppLayout from '@/layouts/AppLayout';
 import Modal from '@/components/Modal';
 import PopUp from '@/components/PopUp';
 import { useTelegramContext, useTelegramUser } from '@/providers/TelegramProvider';
-import { usePage, router } from '@inertiajs/react';
+import { router } from '@inertiajs/react';
 import { createToaster } from "@codenhub/toaster";
 import { useEffect, useRef, useState } from 'react'
 
