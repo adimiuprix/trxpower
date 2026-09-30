@@ -48,6 +48,7 @@ class TelegramHomeController extends Controller
         }
 
         return Inertia::render('HomePage', [
+            'minimumClaim' => 0.5,
             'transactions' => $transactions,
             'miningHistories' => $miningHistories,
         ]);

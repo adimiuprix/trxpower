@@ -221,6 +221,13 @@ class TelegramAuthController extends Controller
                 ], 401);
             }
 
+            // Abort jika balance < 0.05
+            abort_if(
+                $user->balance < 0.05,
+                400,
+                'Minimum balance to claim is 0.05 TRX'
+            );
+
             $newWalletBalance = 0;
             DB::transaction(function () use ($user, &$newWalletBalance) {
                 $user = TelegramUser::lockForUpdate()->find($user->id);

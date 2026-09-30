@@ -1,8 +1,11 @@
-import { useState } from 'react';
+interface PopupProps {
+    isOpen: boolean;
+    onClose: () => void;
+    minimumClaim: number;
+    currentBalance: number;
+}
 
-export default function Popup() {
-    const [isOpen, setIsOpen] = useState(true);
-
+export default function Popup({ isOpen, onClose, minimumClaim, currentBalance }: PopupProps) {
     if (!isOpen) return null;
 
     return (
@@ -10,7 +13,7 @@ export default function Popup() {
             className="cute-popup-overlay active"
             onClick={(event) => {
                 if (event.target === event.currentTarget) {
-                    setIsOpen(false);
+                    onClose();
                 }
             }}
         >
@@ -18,7 +21,7 @@ export default function Popup() {
                 <button
                     type="button"
                     className="cute-popup-close-btn"
-                    onClick={() => setIsOpen(false)}
+                    onClick={onClose}
                 >
                     ×
                 </button>
@@ -65,7 +68,7 @@ export default function Popup() {
 
                 <div className="cute-popup-amount-badge">
                     <span className="cute-popup-amount-val">
-                        0.05
+                        {minimumClaim.toFixed(2)}
                     </span>
 
                     <span className="cute-popup-amount-curr">
@@ -75,21 +78,21 @@ export default function Popup() {
 
                 <p className="cute-popup-desc">
                     You can claim once your mined balance reaches minimum{' '}
-                    <strong>0.05 TRX</strong>.
+                    <strong>{minimumClaim.toFixed(2)} TRX</strong>.
                 </p>
 
                 <div className="cute-popup-current-status">
                     <span>Your Mined:</span>
 
                     <strong id="popup-current-mined-display">
-                        0.006609 TRX
+                        {currentBalance.toFixed(6)} TRX
                     </strong>
                 </div>
 
                 <button
                     type="button"
                     className="btn-cute-popup-ok"
-                    onClick={() => setIsOpen(false)}
+                    onClick={onClose}
                 >
                     Keep Mining
                 </button>

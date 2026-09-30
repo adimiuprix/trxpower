@@ -1,5 +1,6 @@
 import AppLayout from '@/layouts/AppLayout';
 import Modal from '@/components/Modal';
+import PopUp from '@/components/PopUp';
 import { useTelegramContext, useTelegramUser } from '@/providers/TelegramProvider';
 import { usePage, router } from '@inertiajs/react';
 import { createToaster } from "@codenhub/toaster";
@@ -23,13 +24,13 @@ interface Transaction {
 
 interface HomePageProps {
     transactions: { data: Transaction[] };
+    minimumClaim: number;
     [key: string]: unknown;
 }
 
-export default function HomePage() {
+export default function HomePage({ transactions, minimumClaim }: HomePageProps) {
     const user = useTelegramUser();
     const { dbUser, refreshDbUser } = useTelegramContext();
-    const { transactions } = usePage<HomePageProps>().props;
 
     // Balance dari database
     const serverBalance = dbUser?.balance ?? 0;
@@ -45,6 +46,7 @@ export default function HomePage() {
     
     // Modal state
     const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
+    const [isMinimumClaimPopupOpen, setIsMinimumClaimPopupOpen] = useState(false);
     
     // Balance visibility state
     const [isBalanceVisible, setIsBalanceVisible] = useState(true);
@@ -69,27 +71,26 @@ export default function HomePage() {
 
     // Update live balance setiap frame (~60fps) untuk animasi smooth
     useEffect(() => {
-        if (!miningHistories || miningHistories.length === 0) {
-            setLiveBalance(serverBalance);
-            return;
-        }
+        if (!miningHistories?.length) return setLiveBalance(serverBalance);
 
         let rafId: number;
-
         const tick = () => {
-            if (!isPausedRef.current) {
-                setLiveBalance(calculateCurrentBalance());
-            }
+            if (!isPausedRef.current) setLiveBalance(calculateCurrentBalance());
             rafId = requestAnimationFrame(tick);
         };
 
         rafId = requestAnimationFrame(tick);
-
         return () => cancelAnimationFrame(rafId);
     }, [serverBalance, miningHistories]);
 
     const handleClaim = async () => {
         if (isClaiming) return;
+
+        // Validasi minimum claim
+        if (liveBalance < minimumClaim) {
+            setIsMinimumClaimPopupOpen(true);
+            return;
+        }
 
         setIsClaiming(true);
         try {
@@ -139,6 +140,7 @@ export default function HomePage() {
     }
 
     return (
+        <>
         <AppLayout>
             <section
                 className="view-container"
@@ -976,5 +978,14 @@ export default function HomePage() {
                 </div>
             </Modal>
         </AppLayout>
+
+        {/* Minimum Claim PopUp - Rendered outside AppLayout to avoid z-index stacking context issues */}
+        <PopUp 
+            isOpen={isMinimumClaimPopupOpen}
+            onClose={() => setIsMinimumClaimPopupOpen(false)}
+            minimumClaim={minimumClaim}
+            currentBalance={liveBalance}
+        />
+        </>
     );
 }
