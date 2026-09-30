@@ -1,4 +1,6 @@
 import AppLayout from '@/layouts/AppLayout';
+import Modal from '@/components/Modal';
+import { useState } from 'react'
 
 // Plan type matching backend response
 interface Plan {
@@ -24,6 +26,16 @@ const planColors = ['red', 'blue', 'purple', 'orange', 'cyan', 'green'];
 const iconColors = ['#ef4444', '#3b82f6', '#8b5cf6', '#f97316', '#06b6d4', '#10b981'];
 
 export default function MiningPage({ plans = [] }: MiningPageProps) {
+    // Modal state
+    const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
+    const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
+
+    // Handler untuk membuka modal dengan plan yang dipilih
+    const handleActivatePlan = (plan: Plan) => {
+        setSelectedPlan(plan);
+        setIsPurchaseModalOpen(true);
+    };
+
     return (
         <AppLayout>
             <section
@@ -112,6 +124,7 @@ export default function MiningPage({ plans = [] }: MiningPageProps) {
                             <button
                                 type="button"
                                 className={`plan-activate-btn plan-btn-${planColors[index % planColors.length]}`}
+                                onClick={() => handleActivatePlan(plan)}
                             >
                                 <span>Activate Plan</span>
                                 <svg
@@ -184,6 +197,73 @@ export default function MiningPage({ plans = [] }: MiningPageProps) {
                     </div>
                 </div>
             </section>
+
+            {/* Modal purchase plan */}
+            <Modal
+                isOpen={isPurchaseModalOpen} 
+                onClose={() => setIsPurchaseModalOpen(false)}
+                title="Purchase Plan"
+            >
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <div
+                        style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            padding: '8px 0',
+                            borderBottom: '1px solid var(--border-subtle)'
+                        }}
+                    >
+                        <span style={{ color: 'var(--text-muted)' }}>Package</span>
+                        <strong id="purchase-plan-name">{selectedPlan?.name || '-'}</strong>
+                    </div>
+                    <div
+                        style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            padding: '8px 0',
+                            borderBottom: '1px solid var(--border-subtle)'
+                        }}
+                    >
+                        <span style={{ color: 'var(--text-muted)' }}>Price</span>
+                        <strong style={{ color: 'var(--trx-red)' }} id="purchase-plan-price">
+                            {selectedPlan ? `${selectedPlan.price} TRX` : '-'}
+                        </strong>
+                    </div>
+                    <div
+                        style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            padding: '8px 0',
+                            borderBottom: '1px solid var(--border-subtle)'
+                        }}
+                    >
+                        <span style={{ color: 'var(--text-muted)' }}>Daily ROI</span>
+                        <strong style={{ color: '#00e599' }} id="purchase-plan-roi">
+                            {selectedPlan ? `${selectedPlan.daily_roi_percent}% / day (${selectedPlan.duration} days)` : '-'}
+                        </strong>
+                    </div>
+                    <div
+                        style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            padding: '8px 0',
+                            borderBottom: '1px solid var(--border-subtle)'
+                        }}
+                    >
+                        <span style={{ color: 'var(--text-muted)' }}>Estimated Profit</span>
+                        <strong style={{ color: '#00e599' }} id="purchase-plan-total">
+                            {selectedPlan ? `+${selectedPlan.total_return} TRX` : '-'}
+                        </strong>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0' }}>
+                        <span style={{ color: 'var(--text-muted)' }}>Your Balance</span>
+                        <strong id="purchase-user-balance">0.0032 TRX</strong>
+                    </div>
+                </div>
+
+                <button className="btn-submit-action" id="btn-confirm-purchase">Insufficient Balance - Deposit TRX</button>
+            </Modal>
+
         </AppLayout>
     );
 }
