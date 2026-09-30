@@ -39,8 +39,8 @@ export default function MiningPage({ plans = [] }: MiningPageProps) {
     const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
 
     // fetch data user for take deposit balance
-    const user = useTelegramUser();
-    const depositBalance = useTelegramContext().dbUser?.deposit_balance ?? 0;
+    const { dbUser, refreshDbUser } = useTelegramContext();
+    const depositBalance = dbUser?.deposit_balance ?? 0;
 
     // Handler to open the modal with the selected plan
     const handleActivatePlan = (plan: Plan) => {
@@ -82,6 +82,8 @@ export default function MiningPage({ plans = [] }: MiningPageProps) {
             // handle response
             if (data.success) {
                 toaster.semantic.success(data.message || 'Mining plan purchased successfully! 🎉');
+                // Refresh user data untuk update balance
+                await refreshDbUser();
                 // Tutup modal setelah success
                 setIsPurchaseModalOpen(false);
                 setSelectedPlan(null);

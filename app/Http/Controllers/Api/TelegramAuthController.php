@@ -283,7 +283,7 @@ class TelegramAuthController extends Controller
                     'user_id'      => $user->id,
                     'plan_id'      => $plan->id,
                     'status'       => 'active',
-                    'last_sum'     => 0,
+                    'last_sum'     => time(), // Set to current time to prevent balance spike
                     'expire_date'   => now()->addDays($plan->duration)->timestamp,
                 ]);
             });
