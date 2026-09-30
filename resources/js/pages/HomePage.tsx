@@ -21,7 +21,7 @@ interface Transaction {
     created_at: string;
 }
 
-interface PageProps {
+interface HomePageProps {
     transactions: { data: Transaction[] };
     [key: string]: unknown;
 }
@@ -29,7 +29,7 @@ interface PageProps {
 export default function HomePage() {
     const user = useTelegramUser();
     const { dbUser, refreshDbUser } = useTelegramContext();
-    const { transactions } = usePage<PageProps>().props;
+    const { transactions } = usePage<HomePageProps>().props;
 
     // Balance dari database
     const serverBalance = dbUser?.balance ?? 0;

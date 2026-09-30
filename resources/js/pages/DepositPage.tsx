@@ -15,13 +15,13 @@ interface DepositPreset {
     subLabel: string;
 }
 
-interface Props {
+interface DepositPageProps {
     exchangeRate: number;
     depositAddress: string;
     depositPreset: DepositPreset[];
 }
 
-export default function DepositPage({ depositAddress, depositPreset, exchangeRate }: Props) {
+export default function DepositPage({ depositAddress, depositPreset, exchangeRate }: DepositPageProps) {
     const [copySuccess, setCopySuccess] = useState(false);
     const [qrCodeSVG, setQrCodeSVG] = useState<string>('');
     const [copyExactSuccess, setCopyExactSuccess] = useState(false);
