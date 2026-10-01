@@ -5,6 +5,7 @@ use App\Http\Controllers\TelegramHomeController;
 use App\Http\Controllers\TelegramMineController;
 use App\Http\Controllers\TelegramProfileController;
 use App\Http\Controllers\TelegramDepositController;
+use App\Http\Controllers\TestController;
 
 /*
 |--------------------------------------------------------------------------
@@ -28,3 +29,5 @@ Route::get('/deposit', [TelegramDepositController::class, 'index'])->name('depos
 // Telegram Mini App Demo & Example
 Route::inertia('/telegram-demo', 'TelegramDemo')->name('telegram.demo');
 Route::inertia('/telegram-example', 'TelegramExample')->name('telegram.example');
+
+Route::get('/test', [TestController::class, 'index']);
