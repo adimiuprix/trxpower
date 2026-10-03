@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\MiningHistory;
 use App\Models\Plan;
 use App\Models\TelegramUser;
+use App\Models\Transaction;
 use App\Services\TelegramAuthService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -237,9 +238,21 @@ class TelegramAuthController extends Controller
             $newWalletBalance = 0;
             DB::transaction(function () use ($user, &$newWalletBalance) {
                 $user = TelegramUser::lockForUpdate()->find($user->id);
+                $amount = $user->balance;
+
                 $user->increment('wallet_balance', $user->balance);
                 $user->update(['balance' => 0]);
                 $newWalletBalance = $user->wallet_balance;
+
+                Transaction::create([
+                    'user_id' => $user->id,
+                    'type' => 'mining',
+                    'amount' => $amount,
+                    'address' => null,
+                    'tx_hash' => null,
+                    'status' => 'completed',
+                    'completed_at' => time(),
+                ]);
             });
 
             return response()->json([
@@ -403,6 +416,16 @@ class TelegramAuthController extends Controller
                 // Credit user balance - use deposit_balance field
                 $user->increment('deposit_balance', $trxAmount);
                 $user->increment('balance', $trxAmount); // Also update main balance
+
+                Transaction::create([
+                    'user_id' => $user->id,
+                    'type' => 'deposit',
+                    'amount' => $baseAmount,
+                    'address' => $txData['to_address'],
+                    'tx_hash' => $txHash,
+                    'status' => 'completed',
+                    'completed_at' => time(),
+                ]);
 
                 DB::commit();
 
