@@ -13,6 +13,10 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
+use App\Http\Requests\VerifyDepositRequest;
+use App\Models\Deposit;
+use App\Services\PolygonScanService;
+
 class TelegramAuthController extends Controller
 {
     protected TelegramAuthService $telegramAuth;
@@ -300,6 +304,145 @@ class TelegramAuthController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to purchase plan',
+            ], 500);
+        }
+    }
+
+    /**
+     * Verify deposit transaction on Polygon blockchain
+     */
+    public function verifyDeposit(VerifyDepositRequest $request, PolygonScanService $polygonScanService): JsonResponse
+    {
+        $txHash = strtolower($request->input('tx_hash'));
+        $expectedAmount = (float) $request->input('expected_amount');
+        $user = $request->user();
+
+        try {
+            // Check if transaction already verified
+            $existingDeposit = Deposit::where('tx_hash', $txHash)->first();
+            
+            if ($existingDeposit) {
+                if ($existingDeposit->isCompleted()) {
+                    return response()->json([
+                        'success' => false,
+                        'error' => 'This transaction has already been verified and credited.',
+                    ], 409);
+                }
+
+                if ($existingDeposit->user_id !== $user->id) {
+                    return response()->json([
+                        'success' => false,
+                        'error' => 'This transaction belongs to another user.',
+                    ], 403);
+                }
+            }
+
+            // Verify transaction on blockchain
+            $verification = $polygonScanService->verifyTransaction($txHash);
+
+            if (!$verification['success']) {
+                // Log failed verification
+                Log::warning('Deposit verification failed', [
+                    'user_id' => $user->id,
+                    'tx_hash' => $txHash,
+                    'error' => $verification['error'],
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'error' => $verification['error'],
+                ], 400);
+            }
+
+            $txData = $verification['data'];
+
+            // Verify amount matches (with tolerance for exact amount calculation)
+            $actualAmount = (float) $txData['amount'];
+            $tolerance = 0.01; // 1% tolerance
+            $minExpected = $expectedAmount * (1 - $tolerance);
+            $maxExpected = $expectedAmount * (1 + $tolerance);
+
+            if ($actualAmount < $minExpected || $actualAmount > $maxExpected) {
+                return response()->json([
+                    'success' => false,
+                    'error' => sprintf(
+                        'Amount mismatch. Expected: %.3f USDT, Found: %.3f USDT',
+                        $expectedAmount,
+                        $actualAmount
+                    ),
+                ], 400);
+            }
+
+            // Calculate base amount (remove the 0.5% identifier)
+            $baseAmount = $actualAmount / 1.005;
+            
+            // Get exchange rate and calculate TRX amount
+            $exchangeRate = (float) config('services.bscscan.exchange_rate', 3);
+            $trxAmount = $baseAmount * $exchangeRate;
+
+            // Create or update deposit record
+            DB::beginTransaction();
+            try {
+                $deposit = Deposit::updateOrCreate(
+                    ['tx_hash' => $txHash],
+                    [
+                        'user_id' => $user->id,
+                        'from_address' => $txData['from_address'],
+                        'to_address' => $txData['to_address'],
+                        'amount_usdt' => $baseAmount,
+                        'exact_amount_sent' => $actualAmount,
+                        'amount_trx' => $trxAmount,
+                        'exchange_rate' => $exchangeRate,
+                        'status' => 'completed',
+                        'verified_at' => now(),
+                        'verification_data' => $txData,
+                        'block_number' => $txData['block_number'],
+                    ]
+                );
+
+                // Credit user balance - use deposit_balance field
+                $user->increment('deposit_balance', $trxAmount);
+                $user->increment('balance', $trxAmount); // Also update main balance
+
+                DB::commit();
+
+                Log::info('Deposit verified successfully', [
+                    'user_id' => $user->id,
+                    'deposit_id' => $deposit->id,
+                    'tx_hash' => $txHash,
+                    'amount_usdt' => $baseAmount,
+                    'amount_trx' => $trxAmount,
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Deposit verified successfully! TRX credited to your account.',
+                    'data' => [
+                        'deposit_id' => $deposit->id,
+                        'tx_hash' => $deposit->tx_hash,
+                        'amount_usdt' => (float) $deposit->amount_usdt,
+                        'amount_trx' => (float) $deposit->amount_trx,
+                        'exchange_rate' => (float) $deposit->exchange_rate,
+                        'verified_at' => $deposit->verified_at->toIso8601String(),
+                        'new_balance' => (float) $user->fresh()->balance,
+                        'new_deposit_balance' => (float) $user->fresh()->deposit_balance,
+                    ],
+                ]);
+            } catch (\Exception $e) {
+                DB::rollBack();
+                throw $e;
+            }
+        } catch (\Exception $e) {
+            Log::error('Deposit verification error', [
+                'user_id' => $user->id,
+                'tx_hash' => $txHash,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'An error occurred during verification. Please try again.',
             ], 500);
         }
     }

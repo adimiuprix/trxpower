@@ -3,6 +3,7 @@ import { router } from '@inertiajs/react';
 import { generateSVG } from '@trtmn/qrcody';
 import { useEffect, useState } from 'react';
 import { createToaster } from "@codenhub/toaster";
+import VerifyDepositModal from '@/components/VerifyDepositModal';
 
 const toaster = createToaster({
     position: "top-center",
@@ -25,6 +26,8 @@ export default function DepositPage({ depositAddress, depositPreset, exchangeRat
     const [copySuccess, setCopySuccess] = useState(false);
     const [qrCodeSVG, setQrCodeSVG] = useState<string>('');
     const [copyExactSuccess, setCopyExactSuccess] = useState(false);
+    const [isVerifyModalOpen, setIsVerifyModalOpen] = useState(false);
+    const [isVerifying, setIsVerifying] = useState(false);
 
     // Amount presets data from backend
     const amountPresets = depositPreset;
@@ -112,6 +115,35 @@ export default function DepositPage({ depositAddress, depositPreset, exchangeRat
         }
     };
 
+    const handleOpenVerifyModal = () => {
+        setIsVerifyModalOpen(true);
+    };
+
+    const handleCloseVerifyModal = () => {
+        setIsVerifyModalOpen(false);
+    };
+
+    const handleVerificationSuccess = (data: any) => {
+        // Show success message with details
+        toaster.semantic.success(
+            `Successfully verified! ${data.amount_trx} TRX credited to your account.`
+        );
+        
+        // Optional: Reload page or update user balance
+        // You can use Inertia to refresh the page data
+        setTimeout(() => {
+            router.reload({ only: ['user'] }); // Reload user data if needed
+        }, 1500);
+    };
+
+    const handleVerificationStart = () => {
+        setIsVerifying(true);
+    };
+
+    const handleVerificationEnd = () => {
+        setIsVerifying(false);
+    };
+
     return (
         <AppLayout>
             <section
@@ -143,7 +175,7 @@ export default function DepositPage({ depositAddress, depositPreset, exchangeRat
                     <div className="deposit-header-title-box">
                         <h3 className="deposit-header-title">Deposit USDT</h3>
                         <span className="deposit-network-tag">
-                            BEP-20 (BSC)
+                            Polygon (MATIC)
                         </span>
                     </div>
                     <div className="deposit-rate-pill">
@@ -154,7 +186,7 @@ export default function DepositPage({ depositAddress, depositPreset, exchangeRat
                 {/* Top Cute Mini Loading Banner (5 Seconds Countdown) */}
                 <div
                     className="deposit-top-loading-bar"
-                    style={{ display: 'none' }}
+                    style={{ display: isVerifying ? 'flex' : 'none' }}
                 >
                     <div className="top-loading-inner">
                         <div className="top-loading-spinner-ring"></div>
@@ -165,14 +197,9 @@ export default function DepositPage({ depositAddress, depositPreset, exchangeRat
                             <span
                                 className="top-loading-subtext"
                             >
-                                Scanning BSC / BEP-20 mempool...
+                                Scanning Polygon network...
                             </span>
                         </div>
-                        <span
-                            className="top-loading-countdown-tag"
-                        >
-                            5s
-                        </span>
                     </div>
                     <div className="top-loading-track">
                         <div
@@ -199,7 +226,7 @@ export default function DepositPage({ depositAddress, depositPreset, exchangeRat
                             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
                         </svg>
                         <span>
-                            Scan QR with TrustWallet, Binance, or TronLink
+                            Scan QR with MetaMask, Trust Wallet, or Polygon Wallet
                         </span>
                     </div>
                 </div>
@@ -210,7 +237,7 @@ export default function DepositPage({ depositAddress, depositPreset, exchangeRat
                         <span className="deposit-field-label">
                             Official Deposit Address
                         </span>
-                        <span className="deposit-net-badge">BSC / BEP-20</span>
+                        <span className="deposit-net-badge">Polygon</span>
                     </div>
                     <div className="deposit-addr-row">
                         <span className="deposit-addr-text">
@@ -249,7 +276,7 @@ export default function DepositPage({ depositAddress, depositPreset, exchangeRat
                         <span className="deposit-field-label">
                             Select Deposit Amount (USDT)
                         </span>
-                        <span className="deposit-min-tag">Min. $3</span>
+                        <span className="deposit-min-tag">Min. $1</span>
                     </div>
                     <div className="amount-presets-grid">
                         {depositPreset.map((preset) => (
@@ -379,13 +406,12 @@ export default function DepositPage({ depositAddress, depositPreset, exchangeRat
                     </div>
                     <div className="notice-content">
                         <strong>
-                            Important Notice: Minimum Deposit ~3 USDT (min 2.90
-                            USDT)
+                            Important Notice: Minimum Deposit 1 USDT
                         </strong>
                         <p>
-                            Send only official <strong>BEP-20 USDT</strong>{' '}
-                            (Binance-Peg BSC-USD). Verified automatically on
-                            <strong>BscScan &amp; BSC RPC</strong>. Fake or
+                            Send only official <strong>USDT on Polygon</strong>{' '}
+                            (Tether USD). Verified automatically on
+                            <strong> PolygonScan &amp; Polygon RPC</strong>. Fake or
                             unverified tokens will be automatically rejected.
                         </p>
                     </div>
@@ -396,6 +422,8 @@ export default function DepositPage({ depositAddress, depositPreset, exchangeRat
                     <button
                         type="button"
                         className="btn-verify-payment-main"
+                        onClick={handleOpenVerifyModal}
+                        disabled={isVerifying}
                     >
                         <svg
                             width="16"
@@ -406,13 +434,24 @@ export default function DepositPage({ depositAddress, depositPreset, exchangeRat
                         >
                             <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
                         </svg>
-                        <span>Verify Payment</span>
+                        <span>{isVerifying ? 'Verifying...' : 'Verify Payment'}</span>
                     </button>
                     <span className="deposit-action-tip">
                         Balance is credited to your account immediately upon
                         entering TXID
                     </span>
                 </div>
+
+                {/* Verify Deposit Modal */}
+                <VerifyDepositModal
+                    isOpen={isVerifyModalOpen}
+                    onClose={handleCloseVerifyModal}
+                    expectedAmount={parseFloat(exactAmount)}
+                    onVerificationSuccess={handleVerificationSuccess}
+                    onVerificationStart={handleVerificationStart}
+                    onVerificationEnd={handleVerificationEnd}
+                />
+
             </section>
         </AppLayout>
     );

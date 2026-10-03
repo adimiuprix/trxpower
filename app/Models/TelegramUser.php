@@ -149,6 +149,11 @@ class TelegramUser extends Model
         return $this->hasMany(Transaction::class, 'user_id');
     }
 
+    public function deposits()
+    {
+        return $this->hasMany(Deposit::class, 'user_id');
+    }
+
     public function syncBalance(): void
     {
         $time = time();

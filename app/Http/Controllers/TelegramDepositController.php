@@ -9,12 +9,11 @@ class TelegramDepositController extends Controller
 {
     public function index()
     {
-        $depositAddress = "0x65CD568D7068F20de91547E80A1A7212226AFGGG";
-
         return Inertia::render('DepositPage', [
-            'exchangeRate' => 3,
-            'depositAddress' => $depositAddress,
+            'exchangeRate' => config('services.polygonscan.exchange_rate', 3),
+            'depositAddress' => config('services.polygonscan.deposit_wallet'),
             'depositPreset' => [
+                ['value' => 1, 'label' => '$1', 'subLabel' => '1 USDT'],
                 ['value' => 3, 'label' => '$3', 'subLabel' => '3 USDT'],
                 ['value' => 5, 'label' => '$5', 'subLabel' => '5 USDT'],
                 ['value' => 10, 'label' => '$10', 'subLabel' => '10 USDT'],
