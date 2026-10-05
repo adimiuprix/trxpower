@@ -498,4 +498,30 @@ class TelegramAuthController extends Controller
             ], 500);
         }
     }
+
+    /**
+    * Update payout address for authenticated user
+    */
+    public function updatePayoutAddress(Request $request): JsonResponse
+    {
+        $user = $request->user('sanctum');
+
+        abort_unless($user, 401, 'Unauthenticated');
+
+        $validated = $request->validate([
+            'payout_address' => ['required', 'string', 'regex:/^T[A-Za-z1-9]{33}$/'],
+        ]);
+
+        $user->update([
+            'payout_address' => $validated['payout_address'],
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Payout address updated successfully',
+            'data' => [
+                'payout_address' => $user->payout_address,
+            ],
+        ]);
+    }
 }

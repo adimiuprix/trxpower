@@ -3,7 +3,6 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\TelegramAuthController;
-use App\Http\Controllers\Api\TelegramPayoutController;
 
 /*
 |--------------------------------------------------------------------------
@@ -27,7 +26,7 @@ Route::prefix('telegram')->name('telegram.')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/me', [TelegramAuthController::class, 'me'])->name('me');
         Route::post('/claim', [TelegramAuthController::class, 'claim'])->name('claim');
-        Route::post('/payout-address', [TelegramPayoutController::class, 'updatePayoutAddress'])->name('payout-address.update');
+        Route::post('/payout-address', [TelegramAuthController::class, 'updatePayoutAddress'])->name('payout-address.update');
         Route::post('/mining-purchase', [TelegramAuthController::class, 'puchase'])->name('puchase');
         Route::post('/verify-transaction', [TelegramAuthController::class, 'verifyDeposit'])->name('verify');
         Route::post('/logout', [TelegramAuthController::class, 'logout'])->name('logout');
