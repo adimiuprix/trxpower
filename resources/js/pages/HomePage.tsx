@@ -50,6 +50,14 @@ export default function HomePage({ transactions, minimumClaim }: HomePageProps) 
     
     // Balance visibility state
     const [isBalanceVisible, setIsBalanceVisible] = useState(true);
+    
+    // Selected provider state
+    const [selectedProvider, setSelectedProvider] = useState<string>('Binance');
+    
+    // Withdraw form state
+    const [withdrawAddress, setWithdrawAddress] = useState<string>('');
+    const [withdrawAmount, setWithdrawAmount] = useState<string>('');
+    const [isWithdrawing, setIsWithdrawing] = useState(false);
 
     // Calculate live balance with sub-second precision using floating-point timestamp
     const calculateCurrentBalance = (): number => {
@@ -68,6 +76,32 @@ export default function HomePage({ transactions, minimumClaim }: HomePageProps) 
     useEffect(() => {
         setWalletBalance(dbUser?.wallet_balance ?? 0);
     }, [dbUser?.wallet_balance]);
+
+    useEffect(() => {
+        const cards = document.querySelectorAll<HTMLElement>('.provider-card');
+
+        const handleClick = (e: Event) => {
+            const card = e.currentTarget as HTMLElement;
+            const provider = card.dataset.provider;
+
+            if (!provider) return;
+
+            cards.forEach(c => c.classList.remove('active'));
+            card.classList.add('active');
+            setSelectedProvider(provider);
+
+            const ripple = document.createElement('div');
+            ripple.className = 'provider-card-ripple';
+            card.appendChild(ripple);
+            setTimeout(() => ripple.remove(), 600);
+        };
+
+        cards.forEach(card => card.addEventListener('click', handleClick));
+
+        return () => cards.forEach(card => {
+            card.removeEventListener('click', handleClick);
+        });
+    }, [isWithdrawModalOpen]);
 
     // Update live balance setiap frame (~60fps) untuk animasi smooth
     useEffect(() => {
@@ -137,6 +171,106 @@ export default function HomePage({ transactions, minimumClaim }: HomePageProps) 
         } finally {
             setIsClaiming(false);
         }
+    }
+
+    const handleWithdraw = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (isWithdrawing) return;
+
+        const address = withdrawAddress.trim();
+        const amount = parseFloat(withdrawAmount);
+
+        if (!address)
+            return toaster.semantic.error('Please enter a valid TRC20 address');
+
+        if (!withdrawAmount || amount <= 0)
+            return toaster.semantic.error('Please enter a valid withdrawal amount');
+
+        if (amount < 1)
+            return toaster.semantic.error('Minimum withdrawal is 1.0 TRX');
+
+        if (amount > walletBalance)
+            return toaster.semantic.error('Insufficient balance');
+
+        if (!address.startsWith('T') || address.length !== 34)
+            return toaster.semantic.error('Invalid TRC20 address format');
+
+        setIsWithdrawing(true);
+
+        try {
+            const token = localStorage.getItem('telegram_auth_token');
+
+            if (!token)
+                return toaster.semantic.error('Please login again to continue');
+
+            const response = await fetch('/api/telegram/withdraw', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    telegram_id: user?.id,
+                    address,
+                    amount,
+                    provider: selectedProvider,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                // Handle validation errors
+                if (data.errors) {
+                    const errorMessages = Object.values(data.errors).flat().join(', ');
+                    return toaster.semantic.error(errorMessages);
+                }
+                return toaster.semantic.error(
+                    data.message || 'Unable to process withdrawal. Please try again.'
+                );
+            }
+
+            toaster.semantic.success(
+                data.message || 'Withdrawal request submitted successfully!'
+            );
+
+            setWithdrawAddress('');
+            setWithdrawAmount('');
+
+            await refreshDbUser();
+
+            setTimeout(() => setIsWithdrawModalOpen(false), 2000);
+        } catch (error) {
+            console.error('Error processing withdrawal:', error);
+            toaster.semantic.error(
+                'Unable to connect to server. Please check your connection.'
+            );
+        } finally {
+            setIsWithdrawing(false);
+        }
+    };
+
+    const handlePasteAddress = async () => {
+        try {
+            const text = await navigator.clipboard.readText();
+            setWithdrawAddress(text);
+            toaster.semantic.success('Address pasted!');
+        } catch (error) {
+            toaster.semantic.error('Failed to paste from clipboard');
+        }
+    }
+
+    const handleMaxAmount = () => {
+        setWithdrawAmount(walletBalance.toString());
+    }
+
+    // Reset form when modal closes
+    const handleCloseWithdrawModal = () => {
+        setIsWithdrawModalOpen(false);
+        setWithdrawAddress('');
+        setWithdrawAmount('');
+        setSelectedProvider('Binance');
     }
 
     return (
@@ -731,7 +865,7 @@ export default function HomePage({ transactions, minimumClaim }: HomePageProps) 
             {/* Withdraw Modal */}
             <Modal 
                 isOpen={isWithdrawModalOpen} 
-                onClose={() => setIsWithdrawModalOpen(false)}
+                onClose={handleCloseWithdrawModal}
                 title="Withdraw TRX"
             >
                 {/* VIEW 1: WITHDRAW FORM */}
@@ -768,7 +902,7 @@ export default function HomePage({ transactions, minimumClaim }: HomePageProps) 
                         <div className="provider-card" data-provider="Trust Wallet">
                             <div className="provider-logo-wrap trust-wrap">
                                 <img
-                                    src="wallets/trustwallet.svg"
+                                    src="/wallets/trustwallet.svg"
                                     alt="Trust Wallet"
                                     width="24"
                                     height="24"
@@ -823,17 +957,27 @@ export default function HomePage({ transactions, minimumClaim }: HomePageProps) 
                     </div>
 
                     <form
+                        onSubmit={handleWithdraw}
                         style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '10px' }}
                     >
                         <div className="form-group">
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
                                 <label className="form-label" style={{ marginBottom: 0 }}>TRON (TRC20) Destination Address</label>
-                                <button type="button" id="btn-paste-withdraw-addr" className="input-action-link">Paste</button>
+                                <button 
+                                    type="button" 
+                                    id="btn-paste-withdraw-addr" 
+                                    className="input-action-link"
+                                    onClick={handlePasteAddress}
+                                >
+                                    Paste
+                                </button>
                             </div>
                             <input
                                 type="text"
                                 className="form-input"
                                 placeholder="Enter TRC20 address (starts with T...)"
+                                value={withdrawAddress}
+                                onChange={(e) => setWithdrawAddress(e.target.value)}
                                 required
                             />
                         </div>
@@ -845,6 +989,7 @@ export default function HomePage({ transactions, minimumClaim }: HomePageProps) 
                                     type="button"
                                     className="input-action-link"
                                     style={{ color: 'var(--trx-red)', fontWeight: 800 }}
+                                    onClick={handleMaxAmount}
                                 >
                                     MAX
                                 </button>
@@ -852,10 +997,12 @@ export default function HomePage({ transactions, minimumClaim }: HomePageProps) 
                             <div className="input-with-symbol">
                                 <input
                                     type="number"
-                                    step="0.01"
+                                    step="any"
                                     min="1"
                                     className="form-input"
                                     placeholder="Min. 1 TRX"
+                                    value={withdrawAmount}
+                                    onChange={(e) => setWithdrawAmount(e.target.value)}
                                     required
                                 />
                                 <span className="input-suffix-symbol">TRX</span>
@@ -883,22 +1030,50 @@ export default function HomePage({ transactions, minimumClaim }: HomePageProps) 
                         <button
                             type="submit"
                             className="btn-submit-action"
-                            style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                            disabled={isWithdrawing}
+                            style={{ 
+                                display: 'inline-flex', 
+                                alignItems: 'center', 
+                                justifyContent: 'center', 
+                                gap: '6px',
+                                opacity: isWithdrawing ? 0.7 : 1,
+                                cursor: isWithdrawing ? 'not-allowed' : 'pointer'
+                            }}
                         >
-                            <svg
-                                width="18"
-                                height="18"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2.5"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                            >
-                                <line x1="7" y1="17" x2="17" y2="7" />
-                                <polyline points="7 7 17 7 17 17" />
-                            </svg>
-                            <span>Submit Withdrawal</span>
+                            {isWithdrawing ? (
+                                <>
+                                    <svg
+                                        width="18"
+                                        height="18"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2.5"
+                                        style={{ animation: 'spin 1s linear infinite' }}
+                                    >
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <path d="M12 2a10 10 0 0 1 10 10"></path>
+                                    </svg>
+                                    <span>Processing...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <svg
+                                        width="18"
+                                        height="18"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2.5"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                    >
+                                        <line x1="7" y1="17" x2="17" y2="7" />
+                                        <polyline points="7 7 17 7 17 17" />
+                                    </svg>
+                                    <span>Submit Withdrawal</span>
+                                </>
+                            )}
                         </button>
                     </form>
                 </div>

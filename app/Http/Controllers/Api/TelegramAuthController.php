@@ -471,6 +471,122 @@ class TelegramAuthController extends Controller
     }
 
     /**
+    * Update payout address for authenticated user
+    */
+    public function updatePayoutAddress(Request $request): JsonResponse
+    {
+        $user = $request->user('sanctum');
+
+        abort_unless($user, 401, 'Unauthenticated');
+
+        $validated = $request->validate([
+            'payout_address' => ['required', 'string', 'regex:/^T[A-Za-z1-9]{33}$/'],
+        ]);
+
+        $user->update([
+            'payout_address' => $validated['payout_address'],
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Payout address updated successfully',
+            'data' => [
+                'payout_address' => $user->payout_address,
+            ],
+        ]);
+    }
+
+    public function withdraw(Request $request): JsonResponse
+    {
+        try {
+            // Get authenticated user
+            $user = $request->user('sanctum');
+
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthenticated',
+                ], 401);
+            }
+
+            // Validate request
+            $validated = $request->validate([
+                'address' => ['required', 'string', 'regex:/^T[A-Za-z1-9]{33}$/'],
+                'amount' => ['required', 'numeric', 'min:1'],
+                'provider' => ['required', 'string'],
+            ]);
+
+            $amount = (float) $validated['amount'];
+            $address = $validated['address'];
+            $provider = $validated['provider'];
+
+            // Check if wallet balance is sufficient
+            if ($user->wallet_balance < $amount) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Insufficient wallet balance',
+                ], 400);
+            }
+
+            // Create withdrawal transaction
+            DB::transaction(function () use ($user, $amount, $address) {
+                // Lock user for update
+                $user = TelegramUser::lockForUpdate()->find($user->id);
+
+                // Deduct from wallet balance
+                $user->decrement('wallet_balance', $amount);
+
+                // Create transaction record
+                Transaction::create([
+                    'user_id' => $user->id,
+                    'type' => 'withdraw',
+                    'amount' => $amount,
+                    'address' => $address,
+                    'tx_hash' => null, // Will be filled by admin after processing
+                    'status' => 'pending',
+                ]);
+            });
+
+            Log::info('Withdrawal request created', [
+                'user_id' => $user->id,
+                'amount' => $amount,
+                'address' => $address,
+                'provider' => $provider,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Withdrawal request submitted successfully. Admin will process your request shortly.',
+                'data' => [
+                    'amount' => $amount,
+                    'address' => $address,
+                    'provider' => $provider,
+                    'new_wallet_balance' => (float) $user->fresh()->wallet_balance,
+                ],
+            ]);
+
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Withdrawal request failed', [
+                'user_id' => $request->user('sanctum')->id ?? null,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to process withdrawal request',
+                'error' => config('app.debug') ? $e->getMessage() : 'An error occurred',
+            ], 500);
+        }
+    }
+
+    /**
      * Logout and revoke token
      */
     public function logout(Request $request): JsonResponse
@@ -497,31 +613,5 @@ class TelegramAuthController extends Controller
                 'message' => 'Logout failed',
             ], 500);
         }
-    }
-
-    /**
-    * Update payout address for authenticated user
-    */
-    public function updatePayoutAddress(Request $request): JsonResponse
-    {
-        $user = $request->user('sanctum');
-
-        abort_unless($user, 401, 'Unauthenticated');
-
-        $validated = $request->validate([
-            'payout_address' => ['required', 'string', 'regex:/^T[A-Za-z1-9]{33}$/'],
-        ]);
-
-        $user->update([
-            'payout_address' => $validated['payout_address'],
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Payout address updated successfully',
-            'data' => [
-                'payout_address' => $user->payout_address,
-            ],
-        ]);
     }
 }
