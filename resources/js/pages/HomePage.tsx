@@ -743,7 +743,7 @@ export default function HomePage({ transactions, minimumClaim }: HomePageProps) 
                             <span className="withdraw-balance-label">Withdrawable Balance</span>
                             <span className="withdraw-balance-sub">Claimed Mining Rewards</span>
                         </div>
-                        <div className="withdraw-balance-value">0.0032 TRX</div>
+                        <div className="withdraw-balance-value">{Number(walletBalance).toFixed(4)} TRX</div>
                     </div>
 
                     {/* Step 1: Select Wallet / Exchange Destination */}
@@ -754,7 +754,7 @@ export default function HomePage({ transactions, minimumClaim }: HomePageProps) 
                         <div className="provider-card active" data-provider="Binance">
                             <div className="provider-logo-wrap binance-wrap">
                                 <img
-                                    src="images/wallets/binance.svg"
+                                    src="/wallets/binance.svg"
                                     alt="Binance"
                                     width="24"
                                     height="24"
@@ -768,7 +768,7 @@ export default function HomePage({ transactions, minimumClaim }: HomePageProps) 
                         <div className="provider-card" data-provider="Trust Wallet">
                             <div className="provider-logo-wrap trust-wrap">
                                 <img
-                                    src="images/wallets/trustwallet.svg"
+                                    src="wallets/trustwallet.svg"
                                     alt="Trust Wallet"
                                     width="24"
                                     height="24"
@@ -782,7 +782,7 @@ export default function HomePage({ transactions, minimumClaim }: HomePageProps) 
                         <div className="provider-card" data-provider="MetaMask">
                             <div className="provider-logo-wrap metamask-wrap">
                                 <img
-                                    src="images/wallets/metamask.svg"
+                                    src="/wallets/metamask.svg"
                                     alt="MetaMask"
                                     width="24"
                                     height="24"
@@ -796,7 +796,7 @@ export default function HomePage({ transactions, minimumClaim }: HomePageProps) 
                         <div className="provider-card" data-provider="TronLink">
                             <div className="provider-logo-wrap tronlink-wrap">
                                 <img
-                                    src="images/wallets/tronlink.png"
+                                    src="/wallets/tronlink.svg"
                                     alt="TronLink"
                                     width="24"
                                     height="24"
@@ -810,7 +810,7 @@ export default function HomePage({ transactions, minimumClaim }: HomePageProps) 
                         <div className="provider-card" data-provider="Other Wallet">
                             <div className="provider-logo-wrap other-wrap">
                                 <img
-                                    src="images/wallets/other.svg"
+                                    src="/wallets/other.svg"
                                     alt="Other Wallet"
                                     width="24"
                                     height="24"
@@ -823,7 +823,6 @@ export default function HomePage({ transactions, minimumClaim }: HomePageProps) 
                     </div>
 
                     <form
-                        id="withdraw-submission-form"
                         style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '10px' }}
                     >
                         <div className="form-group">
@@ -834,7 +833,6 @@ export default function HomePage({ transactions, minimumClaim }: HomePageProps) 
                             <input
                                 type="text"
                                 className="form-input"
-                                id="withdraw-address-input"
                                 placeholder="Enter TRC20 address (starts with T...)"
                                 required
                             />
@@ -845,7 +843,6 @@ export default function HomePage({ transactions, minimumClaim }: HomePageProps) 
                                 <label className="form-label" style={{ marginBottom: 0 }}>Withdrawal Amount (TRX)</label>
                                 <button
                                     type="button"
-                                    id="btn-max-withdraw"
                                     className="input-action-link"
                                     style={{ color: 'var(--trx-red)', fontWeight: 800 }}
                                 >
@@ -858,7 +855,6 @@ export default function HomePage({ transactions, minimumClaim }: HomePageProps) 
                                     step="0.01"
                                     min="1"
                                     className="form-input"
-                                    id="withdraw-amount-input"
                                     placeholder="Min. 1 TRX"
                                     required
                                 />
@@ -887,7 +883,6 @@ export default function HomePage({ transactions, minimumClaim }: HomePageProps) 
                         <button
                             type="submit"
                             className="btn-submit-action"
-                            id="btn-submit-withdraw-action"
                             style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                         >
                             <svg
@@ -903,7 +898,7 @@ export default function HomePage({ transactions, minimumClaim }: HomePageProps) 
                                 <line x1="7" y1="17" x2="17" y2="7" />
                                 <polyline points="7 7 17 7 17 17" />
                             </svg>
-                            <span id="btn-withdraw-label">Submit Withdrawal</span>
+                            <span>Submit Withdrawal</span>
                         </button>
                     </form>
                 </div>
@@ -933,15 +928,15 @@ export default function HomePage({ transactions, minimumClaim }: HomePageProps) 
                         <div className="withdraw-receipt-card">
                             <div className="receipt-row">
                                 <span>Amount</span>
-                                <strong className="receipt-amount" id="success-receipt-amount">0.00 TRX</strong>
+                                <strong className="receipt-amount">0.00 TRX</strong>
                             </div>
                             <div className="receipt-row">
                                 <span>Destination</span>
-                                <strong id="success-receipt-provider">Binance</strong>
+                                <strong>Binance</strong>
                             </div>
                             <div className="receipt-row">
                                 <span>Address</span>
-                                <span className="receipt-addr" id="success-receipt-address">T...</span>
+                                <span className="receipt-addr">T...</span>
                             </div>
                             <div className="receipt-row">
                                 <span>Network Fee</span>
