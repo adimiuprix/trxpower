@@ -547,13 +547,6 @@ class TelegramAuthController extends Controller
                 ]);
             });
 
-            Log::info('Withdrawal request created', [
-                'user_id' => $user->id,
-                'amount' => $amount,
-                'address' => $address,
-                'provider' => $provider,
-            ]);
-
             return response()->json([
                 'success' => true,
                 'message' => 'Withdrawal request submitted successfully. Admin will process your request shortly.',
