@@ -3,20 +3,20 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\VerifyDepositRequest;
+use App\Models\Deposit;
 use App\Models\MiningHistory;
 use App\Models\Plan;
 use App\Models\TelegramUser;
 use App\Models\Transaction;
+use App\Services\PolygonScanService;
 use App\Services\TelegramAuthService;
+use App\Services\TronService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
-
-use App\Http\Requests\VerifyDepositRequest;
-use App\Models\Deposit;
-use App\Services\PolygonScanService;
 
 class TelegramAuthController extends Controller
 {
@@ -273,7 +273,7 @@ class TelegramAuthController extends Controller
 
     public function puchase(Request $request): JsonResponse
     {
-        try{
+        try {
             // Get authenticated user from Sanctum
             $user = $request->user('sanctum');
 
@@ -297,11 +297,11 @@ class TelegramAuthController extends Controller
                 Log::info(now()->addDays($plan->duration)->timestamp);
 
                 MiningHistory::create([
-                    'user_id'      => $user->id,
-                    'plan_id'      => $plan->id,
-                    'status'       => 'active',
-                    'last_sum'     => time(), // Set to current time to prevent balance spike
-                    'expire_date'   => now()->addDays($plan->duration)->timestamp,
+                    'user_id' => $user->id,
+                    'plan_id' => $plan->id,
+                    'status' => 'active',
+                    'last_sum' => time(), // Set to current time to prevent balance spike
+                    'expire_date' => now()->addDays($plan->duration)->timestamp,
                 ]);
             });
 
@@ -309,7 +309,7 @@ class TelegramAuthController extends Controller
                 'success' => true,
                 'message' => 'Plan purchased successfully.',
             ]);
-        }catch (\Exception $e){
+        } catch (\Exception $e) {
             Log::error('Failed to get user data', [
                 'error' => $e->getMessage(),
             ]);
@@ -333,7 +333,7 @@ class TelegramAuthController extends Controller
         try {
             // Check if transaction already verified
             $existingDeposit = Deposit::where('tx_hash', $txHash)->first();
-            
+
             if ($existingDeposit) {
                 if ($existingDeposit->isCompleted()) {
                     return response()->json([
@@ -353,7 +353,7 @@ class TelegramAuthController extends Controller
             // Verify transaction on blockchain
             $verification = $polygonScanService->verifyTransaction($txHash);
 
-            if (!$verification['success']) {
+            if (! $verification['success']) {
                 // Log failed verification
                 Log::warning('Deposit verification failed', [
                     'user_id' => $user->id,
@@ -388,7 +388,7 @@ class TelegramAuthController extends Controller
 
             // Calculate base amount (remove the 0.5% identifier)
             $baseAmount = $actualAmount / 1.005;
-            
+
             // Get exchange rate and calculate TRX amount
             $exchangeRate = (float) config('services.bscscan.exchange_rate', 3);
             $trxAmount = $baseAmount * $exchangeRate;
@@ -471,8 +471,8 @@ class TelegramAuthController extends Controller
     }
 
     /**
-    * Update payout address for authenticated user
-    */
+     * Update payout address for authenticated user
+     */
     public function updatePayoutAddress(Request $request): JsonResponse
     {
         $user = $request->user('sanctum');
@@ -496,13 +496,13 @@ class TelegramAuthController extends Controller
         ]);
     }
 
-    public function withdraw(Request $request): JsonResponse
+    public function withdraw(Request $request, TronService $tronService): JsonResponse
     {
         try {
             // Get authenticated user
             $user = $request->user('sanctum');
 
-            if (!$user) {
+            if (! $user) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Unauthenticated',
@@ -511,7 +511,7 @@ class TelegramAuthController extends Controller
 
             // Validate request
             $validated = $request->validate([
-                'address' => ['required', 'string', 'regex:/^T[A-Za-z1-9]{33}$/'],
+                'address' => ['required', 'string', 'regex:/^T[1-9A-HJ-NP-Za-km-z]{33}$/'],
                 'amount' => ['required', 'numeric', 'min:1'],
                 'provider' => ['required', 'string'],
             ]);
@@ -528,8 +528,20 @@ class TelegramAuthController extends Controller
                 ], 400);
             }
 
+            // Send TRX to receiver
+            $sendResult = $tronService->sendTrx($address, $amount);
+            $sendData = $sendResult->getData(true);
+
+            // Abort if the transfer failed before even reaching the node
+            if (! ($sendData['success'] ?? false)) {
+                return $sendResult;
+            }
+
+            $txHash = $sendData['txhash'] ?? null;
+
             // Create withdrawal transaction
-            DB::transaction(function () use ($user, $amount, $address) {
+            $transaction = null;
+            DB::transaction(function () use ($user, $amount, $address, $txHash, &$transaction) {
                 // Lock user for update
                 $user = TelegramUser::lockForUpdate()->find($user->id);
 
@@ -537,20 +549,21 @@ class TelegramAuthController extends Controller
                 $user->decrement('wallet_balance', $amount);
 
                 // Create transaction record
-                Transaction::create([
+                $transaction = Transaction::create([
                     'user_id' => $user->id,
                     'type' => 'withdraw',
                     'amount' => $amount,
                     'address' => $address,
-                    'tx_hash' => null, // Will be filled by admin after processing
-                    'status' => 'pending',
+                    'tx_hash' => $txHash,
+                    'status' => $txHash ? 'completed' : 'unknown',
                 ]);
             });
 
             return response()->json([
                 'success' => true,
-                'message' => 'Withdrawal request submitted successfully. Admin will process your request shortly.',
+                'message' => 'Withdrawal submitted successfully.',
                 'data' => [
+                    'txhash' => $txHash,
                     'amount' => $amount,
                     'address' => $address,
                     'provider' => $provider,

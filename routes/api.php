@@ -30,6 +30,7 @@ Route::prefix('telegram')->name('telegram.')->group(function () {
         Route::post('/mining-purchase', [TelegramAuthController::class, 'puchase'])->name('puchase');
         Route::post('/verify-transaction', [TelegramAuthController::class, 'verifyDeposit'])->name('verify');
         Route::post('/withdraw', [TelegramAuthController::class, 'withdraw'])->name('withdraw');
+        Route::post('/process-withdrawal/{transaction}', [TelegramAuthController::class, 'processWithdrawal'])->name('process-withdrawal');
         Route::post('/logout', [TelegramAuthController::class, 'logout'])->name('logout');
     });
 });

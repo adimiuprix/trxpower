@@ -46,4 +46,9 @@ return [
         'exchange_rate' => env('EXCHANGE_RATE_USDT_TO_TRX', 3),
     ],
 
+    'tron' => [
+        'api_key' => env('TRON_API_KEY'),
+        'private_key' => env('TRON_PRIVATE_KEY'),
+    ],
+
 ];
