@@ -59,6 +59,15 @@ export default function HomePage({ transactions, minimumClaim }: HomePageProps) 
     const [withdrawAmount, setWithdrawAmount] = useState<string>('');
     const [isWithdrawing, setIsWithdrawing] = useState(false);
 
+    // Auto-fill withdraw address from payout_address when modal opens
+    useEffect(() => {
+        if (isWithdrawModalOpen) {
+            // Always refresh from latest dbUser when modal opens
+            const latestPayoutAddress = dbUser?.payout_address || '';
+            setWithdrawAddress(latestPayoutAddress);
+        }
+    }, [isWithdrawModalOpen, dbUser?.payout_address]);
+
     // Calculate live balance with sub-second precision using floating-point timestamp
     const calculateCurrentBalance = (): number => {
         const nowMs = Date.now() / 1000; // float seconds untuk presisi sub-detik
@@ -960,26 +969,78 @@ export default function HomePage({ transactions, minimumClaim }: HomePageProps) 
                         onSubmit={handleWithdraw}
                         style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '10px' }}
                     >
+                        {/* Info banner for users without saved address */}
+                        {!dbUser?.payout_address && (
+                            <div style={{
+                                padding: '12px',
+                                borderRadius: '8px',
+                                background: 'rgba(255, 193, 7, 0.1)',
+                                border: '1px solid rgba(255, 193, 7, 0.3)',
+                                fontSize: '12px',
+                                color: '#ffc107',
+                                display: 'flex',
+                                alignItems: 'flex-start',
+                                gap: '8px'
+                            }}>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ flexShrink: 0, marginTop: '1px' }}>
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <line x1="12" y1="16" x2="12" y2="12"/>
+                                    <line x1="12" y1="8" x2="12.01" y2="8"/>
+                                </svg>
+                                <div>
+                                    <strong>Tip:</strong> Save your withdrawal address in your profile to auto-fill it next time!
+                                </div>
+                            </div>
+                        )}
+
                         <div className="form-group">
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
                                 <label className="form-label" style={{ marginBottom: 0 }}>TRON (TRC20) Destination Address</label>
-                                <button 
-                                    type="button" 
-                                    id="btn-paste-withdraw-addr" 
-                                    className="input-action-link"
-                                    onClick={handlePasteAddress}
-                                >
-                                    Paste
-                                </button>
+                                <div style={{ display: 'flex', gap: '8px' }}>
+                                    {dbUser?.payout_address && (
+                                        <button 
+                                            type="button" 
+                                            className="input-action-link"
+                                            onClick={() => setWithdrawAddress(dbUser.payout_address || '')}
+                                            style={{ color: 'var(--trx-red)' }}
+                                        >
+                                            Use Saved
+                                        </button>
+                                    )}
+                                    <button 
+                                        type="button" 
+                                        id="btn-paste-withdraw-addr" 
+                                        className="input-action-link"
+                                        onClick={handlePasteAddress}
+                                    >
+                                        Paste
+                                    </button>
+                                </div>
                             </div>
                             <input
                                 type="text"
                                 className="form-input"
-                                placeholder="Enter TRC20 address (starts with T...)"
+                                placeholder={dbUser?.payout_address ? "Using your saved address..." : "Enter TRC20 address (starts with T...)"}
                                 value={withdrawAddress}
                                 onChange={(e) => setWithdrawAddress(e.target.value)}
                                 required
                             />
+                            {dbUser?.payout_address && withdrawAddress === dbUser.payout_address && (
+                                <div style={{ 
+                                    fontSize: '11px', 
+                                    color: '#00e599', 
+                                    marginTop: '4px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '4px'
+                                }}>
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                        <polyline points="22 4 12 14.01 9 11.01"/>
+                                    </svg>
+                                    <span>Using your saved withdrawal address</span>
+                                </div>
+                            )}
                         </div>
 
                         <div className="form-group">

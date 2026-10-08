@@ -12,7 +12,7 @@ const toaster = createToaster({
 export default function ProfilePage() {
     // Akses data user dari Telegram Context
     const user = useTelegramUser();
-    const { showAlert, haptic, dbUser } = useTelegramContext();
+    const { showAlert, haptic, dbUser, refreshDbUser } = useTelegramContext();
 
     const [payoutAddress, setPayoutAddress] = useState(dbUser?.payout_address || '')
     const [isSaving, setIsSaving] = useState(false)
@@ -166,6 +166,9 @@ export default function ProfilePage() {
             if (data.success) {
                 haptic.notification('success');
                 toaster.semantic.success('Your payout address has been updated successfully');
+                
+                // Refresh dbUser to get latest data
+                await refreshDbUser();
             } else {
                 haptic.notification('error');
                 toaster.semantic.error(data.message || 'Failed to save address. Please try again.');
