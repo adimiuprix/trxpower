@@ -52,8 +52,11 @@ class TelegramAuthController extends Controller
                 empty($userData['id']), 400, 'User ID not found in Telegram data'
             );
 
-            // Create or update user
-            $user = TelegramUser::createOrUpdateFromTelegram($userData);
+            // Get referral code from initData (start_param)
+            $referralCode = $this->telegramAuth->getStartParam($initData);
+
+            // Create or update user with referral tracking
+            $user = TelegramUser::createOrUpdateFromTelegram($userData, $referralCode);
 
             // Generate Sanctum token
             $token = $user->createToken('telegram-mini-app')->plainTextToken;
@@ -73,6 +76,8 @@ class TelegramAuthController extends Controller
                     'balance' => (float) $user->balance,
                     'wallet_balance' => (float) $user->wallet_balance,
                     'referral_code' => $user->referral_code,
+                    'referred_by' => $user->referred_by ?? 0,
+                    'total_referrals' => $user->total_referrals ?? 0,
                     'mined' => $user->mined,
                     'is_new_user' => $user->wasRecentlyCreated,
                     'token' => $token,

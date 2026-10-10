@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Laravel\Sanctum\HasApiTokens;
 
 class TelegramUser extends Model
@@ -58,9 +60,23 @@ class TelegramUser extends Model
 
     /**
      * Create or update user from Telegram data
+     * 
+     * @param array $userData User data from Telegram
+     * @param string|null $referralCode Referral code from start_param
+     * @return self
      */
-    public static function createOrUpdateFromTelegram(array $userData): self
+    public static function createOrUpdateFromTelegram(array $userData, ?string $referralCode = null): self
     {
+        // Find referrer if referral code provided
+        $referrerId = null;
+        if ($referralCode) {
+            $referrer = static::where('referral_code', $referralCode)->first();
+            if ($referrer && $referrer->telegram_id !== $userData['id']) {
+                // Valid referrer found (and not self-referral)
+                $referrerId = $referrer->id;
+            }
+        }
+
         // Use updateOrCreate untuk handle race condition dengan atomic operation
         $user = static::updateOrCreate(
             ['telegram_id' => $userData['id']], // Unique key untuk find
@@ -75,6 +91,27 @@ class TelegramUser extends Model
                 'last_active_at' => now(),
             ]
         );
+
+        // Set referred_by ONLY for NEW users
+        if ($user->wasRecentlyCreated) {
+            $user->update([
+                'referred_by' => $referrerId ?? 0, // Default 0 if no referrer
+            ]);
+
+            // Increment referrer's total_referrals
+            if ($referrerId) {
+                DB::table('telegram_users')
+                    ->where('id', $referrerId)
+                    ->increment('total_referrals');
+
+                Log::info('New user referred', [
+                    'new_user_id' => $user->id,
+                    'new_user_telegram_id' => $user->telegram_id,
+                    'referred_by_id' => $referrerId,
+                    'referral_code' => $referralCode,
+                ]);
+            }
+        }
 
         // Generate referral code hanya untuk user baru
         if ($user->wasRecentlyCreated && empty($user->referral_code)) {

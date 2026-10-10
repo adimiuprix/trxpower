@@ -113,14 +113,39 @@ class TelegramAuthService
 
     /**
      * Get start parameter from initData
+     * Handles both 'start_param' (regular bots) and 'start_app' (Mini Apps)
+     * Also strips common prefixes like 'ref_', 'referral_', etc.
+     * 
+     * Example:
+     * - Regular bot: start_param=TRXABC123
+     * - Mini App: start_app=ref_TRXABC123 → extracts TRXABC123
      * 
      * @param string $initData Raw initData string
-     * @return string|null Start parameter if exists
+     * @return string|null Start parameter if exists (cleaned)
      */
     public function getStartParam(string $initData): ?string
     {
         parse_str($initData, $data);
-        return $data['start_param'] ?? null;
+        
+        // Try Mini App parameter first (start_app with underscore)
+        $param = $data['start_app'] ?? null;
+        
+        // Fallback to regular bot parameter (start_param)
+        if (empty($param)) {
+            $param = $data['start_param'] ?? null;
+        }
+        
+        // Strip common prefixes: ref_, referral_, code_
+        if ($param) {
+            $param = preg_replace('/^(ref_|referral_|code_)/i', '', $param);
+            
+            Log::info('Extracted referral code from initData', [
+                'original_param' => $data['start_app'] ?? $data['start_param'] ?? null,
+                'cleaned_code' => $param,
+            ]);
+        }
+        
+        return $param;
     }
 
     /**
