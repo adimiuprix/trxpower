@@ -114,8 +114,8 @@ class TelegramUser extends Model
             }
         }
 
-        // Generate referral code hanya untuk user baru
-        if ($user->wasRecentlyCreated && empty($user->referral_code)) {
+        // Generate referral code untuk user yang belum punya (termasuk user lama)
+        if (empty($user->referral_code)) {
             $user->update([
                 'referral_code' => static::generateReferralCode(),
             ]);

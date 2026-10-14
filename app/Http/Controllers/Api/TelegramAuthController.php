@@ -123,6 +123,14 @@ class TelegramAuthController extends Controller
             // Update last active
             $user->updateLastActive();
 
+            // Generate referral code jika belum ada (untuk user lama)
+            $user->when(
+                blank($user->referral_code),
+                fn ($user) => $user->update([
+                    'referral_code' => TelegramUser::generateReferralCode(),
+                ])
+            );
+
             // expire plans
             $user->expirePlans();
 

@@ -16,9 +16,17 @@ export default function ReferralPage() {
     const referrals = dbUser?.referrals
     const earning = dbUser?.earning
 
-    const referralLink = `https://t.me/tronmynerybot/app?startapp=ref_${reffCode}`;
+    // Validasi referral code - jangan buat link jika undefined/null
+    const referralLink = reffCode 
+        ? `https://t.me/tronmynerybot/app?startapp=ref_${reffCode}`
+        : '';
 
     const handleCopy = async () => {
+        if (!reffCode) {
+            toaster.semantic.error('Referral code not available. Please refresh the page.');
+            return;
+        }
+
         try {
             await navigator.clipboard.writeText(referralLink);
             setCopySuccess(true);
@@ -249,13 +257,13 @@ export default function ReferralPage() {
                             Code:
                             <strong
                                 style={{
-                                    color: 'var(--trx-red)',
+                                    color: reffCode ? 'var(--trx-red)' : '#F59E0B',
                                     fontFamily: 'var(--font-mono)',
                                     fontSize: '12px',
                                 }}
                                 id="referral-code-badge"
                             >
-                                {reffCode}
+                                {reffCode || 'Loading...'}
                             </strong>
                         </span>
                     </div>
@@ -266,8 +274,16 @@ export default function ReferralPage() {
                             id="referral-link"
                             readOnly
                             value={referralLink}
+                            placeholder={reffCode ? referralLink : 'Loading referral link...'}
                         />
-                        <button className="btn-copy" onClick={handleCopy}>{copySuccess ? 'Copied!' : 'Copy'}</button>
+                        <button 
+                            className="btn-copy" 
+                            onClick={handleCopy}
+                            disabled={!reffCode}
+                            style={{ opacity: reffCode ? 1 : 0.5, cursor: reffCode ? 'pointer' : 'not-allowed' }}
+                        >
+                            {copySuccess ? 'Copied!' : 'Copy'}
+                        </button>
                     </div>
 
                     {/* Direct Launch Telegram Share Button */}
