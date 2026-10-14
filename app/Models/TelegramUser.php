@@ -88,6 +88,7 @@ class TelegramUser extends Model
                 'language_code'  => $userData['languageCode'] ?? null,
                 'is_premium'     => $userData['isPremium'] ?? false,
                 'photo_url'      => $userData['photoUrl'] ?? null,
+                'referral_code'  => str()->random(8),
                 'last_active_at' => now(),
             ]
         );

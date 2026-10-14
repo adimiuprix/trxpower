@@ -291,7 +291,6 @@ export default function ReferralPage() {
 
                     {/* Hidden element to maintain backwards compatibility with any other script */}
                     <span
-                        id="referral-total-earned"
                         style={{ display: 'none' }}
                     >
                         0.0000 TRX
@@ -317,7 +316,7 @@ export default function ReferralPage() {
                             }}
                         >
                             Referred Downlines (
-                            <span id="referral-total-count">0</span>)
+                            <span>0</span>)
                         </h4>
                         <span
                             style={{
