@@ -90,8 +90,10 @@ class TelegramAuthService {
     }
 
     constructor() {
-        // Load token from localStorage on init
-        this.token = localStorage.getItem(this.TOKEN_KEY);
+        // Load token from localStorage on init (browser only)
+        if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+            this.token = localStorage.getItem(this.TOKEN_KEY);
+        }
     }
 
     /**
@@ -138,9 +140,11 @@ class TelegramAuthService {
             const data = await this.handleResponse<AuthResponse>(response);
 
             if (data.success && data.data?.token) {
-                // Save token to localStorage
+                // Save token to localStorage (browser only)
                 this.token = data.data.token;
-                localStorage.setItem(this.TOKEN_KEY, this.token);
+                if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+                    localStorage.setItem(this.TOKEN_KEY, this.token);
+                }
 
                 console.log('✅ User authenticated successfully', {
                     telegram_id: data.data.telegram_id,
@@ -218,7 +222,9 @@ class TelegramAuthService {
      */
     private clearToken(): void {
         this.token = null;
-        localStorage.removeItem(this.TOKEN_KEY);
+        if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+            localStorage.removeItem(this.TOKEN_KEY);
+        }
     }
 
     /**
@@ -236,5 +242,5 @@ class TelegramAuthService {
     }
 }
 
-// Export singleton instance
+// Export singleton instance (SSR-safe: constructor doesn't access browser APIs)
 export const telegramAuthService = new TelegramAuthService();
