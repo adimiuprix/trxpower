@@ -1,12 +1,33 @@
 import AppLayout from '@/layouts/AppLayout';
 import { useTelegramContext } from '@/providers/TelegramProvider';
+import { useState } from 'react'
+import { createToaster } from "@codenhub/toaster";
+
+const toaster = createToaster({
+    position: "top-center",
+    duration: 3000,
+});
 
 export default function ReferralPage() {
+    const [copySuccess, setCopySuccess] = useState(false);
     const { dbUser } = useTelegramContext();
     const reffCode = dbUser?.referral_code
     const totReff = dbUser?.referral_total
     const referrals = dbUser?.referrals
     const earning = dbUser?.earning
+
+    const referralLink = `https://t.me/tronmynerybot/app?startapp=ref_${reffCode}`;
+
+    const handleCopy = async () => {
+        try {
+            await navigator.clipboard.writeText(referralLink);
+            setCopySuccess(true);
+            toaster.semantic.success('Referral link copied!');
+            setTimeout(() => setCopySuccess(false), 2000);
+        } catch (error) {
+            toaster.semantic.error('Failed to copy link');
+        }
+    }
 
     return (
         <AppLayout>
@@ -242,11 +263,11 @@ export default function ReferralPage() {
                     <div className="copy-input-row">
                         <input
                             type="text"
-                            id="referral-link-input"
+                            id="referral-link"
                             readOnly
-                            value={`https://t.me/trxbusiness_bot/app?startapp=ref_${reffCode}`}
+                            value={referralLink}
                         />
-                        <button className="btn-copy">Copy</button>
+                        <button className="btn-copy" onClick={handleCopy}>{copySuccess ? 'Copied!' : 'Copy'}</button>
                     </div>
 
                     {/* Direct Launch Telegram Share Button */}
