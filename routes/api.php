@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\TelegramAuthController;
+use App\Http\Controllers\Api\TelegramWebhookController;
 
 /*
 |--------------------------------------------------------------------------
@@ -19,6 +20,12 @@ use App\Http\Controllers\Api\TelegramAuthController;
 
 // Telegram Authentication API
 Route::prefix('telegram')->name('telegram.')->group(function () {
+    // Public endpoint - telegram bot webhook, Receives incoming updates from Telegram, such as /start commands and messages
+    Route::post('/set-webhook', [TelegramWebhookController::class, 'setWebhook'])->name('set.webhook');
+
+    // Public endpoint - receive message from external and answer back to sender
+    Route::post('/webhook', [TelegramWebhookController::class, 'Webhook'])->name('webhook');
+
     // Public endpoint - authentication with initData validation
     Route::post('/auth', [TelegramAuthController::class, 'authenticate'])->name('auth');
     

@@ -14,14 +14,25 @@ return [
     |
     */
 
+    'polygonscan' => [
+        'api_key' => env('POLYGONSCAN_API_KEY'),
+        'api_url' => env('POLYGONSCAN_API_URL', 'https://api.etherscan.io/v2/api'), // Unified v2 endpoint
+        'chain_id' => env('POLYGON_CHAIN_ID', 137), // 137 = mainnet, 80002 = amoy testnet
+        'rpc_url' => env('POLYGON_RPC_URL', 'https://polygon-rpc.com/'),
+        'usdt_contract' => env('USDT_CONTRACT_ADDRESS', '0xc2132D05D31c914a87C6611C10748AEb04B58e8F'),
+        'deposit_wallet' => env('DEPOSIT_WALLET_ADDRESS'),
+        'min_amount' => env('DEPOSIT_MIN_AMOUNT', 1.00),
+        'exchange_rate' => env('EXCHANGE_RATE_USDT_TO_TRX', 3),
+    ],
+
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),
     ],
-
+        
     'resend' => [
         'key' => env('RESEND_API_KEY'),
     ],
-
+        
     'ses' => [
         'key' => env('AWS_ACCESS_KEY_ID'),
         'secret' => env('AWS_SECRET_ACCESS_KEY'),
@@ -35,15 +46,9 @@ return [
         ],
     ],
 
-    'polygonscan' => [
-        'api_key' => env('POLYGONSCAN_API_KEY'),
-        'api_url' => env('POLYGONSCAN_API_URL', 'https://api.etherscan.io/v2/api'), // Unified v2 endpoint
-        'chain_id' => env('POLYGON_CHAIN_ID', 137), // 137 = mainnet, 80002 = amoy testnet
-        'rpc_url' => env('POLYGON_RPC_URL', 'https://polygon-rpc.com/'),
-        'usdt_contract' => env('USDT_CONTRACT_ADDRESS', '0xc2132D05D31c914a87C6611C10748AEb04B58e8F'),
-        'deposit_wallet' => env('DEPOSIT_WALLET_ADDRESS'),
-        'min_amount' => env('DEPOSIT_MIN_AMOUNT', 1.00),
-        'exchange_rate' => env('EXCHANGE_RATE_USDT_TO_TRX', 3),
+    'telegram' => [
+        'token' => env('TELEGRAM_BOT_TOKEN'),
+        'application' => env('TELEGRAM_BOT_APP'),
     ],
 
     'tron' => [
