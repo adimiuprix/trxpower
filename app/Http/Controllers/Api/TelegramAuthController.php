@@ -307,8 +307,14 @@ class TelegramAuthController extends Controller
                 }
                 $user->decrement('deposit_balance', $plan->price);
 
-                Log::info(now()->addDays($plan->duration)->timestamp);
+                // check referrer - give commission if user has valid referrer
+                if ($user->referred_by > 0 && ($referrer = TelegramUser::find($user->referred_by))) {
+                    $commission = $plan->price * 0.10;
+                    $referrer->increment('earning', $commission);
+                    $referrer->increment('wallet_balance', $commission);
+                }
 
+                // Create mining history
                 MiningHistory::create([
                     'user_id' => $user->id,
                     'plan_id' => $plan->id,
