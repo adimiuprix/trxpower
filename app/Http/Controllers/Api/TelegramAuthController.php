@@ -284,7 +284,7 @@ class TelegramAuthController extends Controller
         }
     }
 
-    public function puchase(Request $request): JsonResponse
+    public function purchase(Request $request): JsonResponse
     {
         try {
             // Get authenticated user from Sanctum
@@ -297,29 +297,38 @@ class TelegramAuthController extends Controller
                 ], 401);
             }
 
+            $userId = $user->id; // Save user ID for error logging
+
             DB::transaction(function () use ($user, &$request) {
-                $user = TelegramUser::lockForUpdate()->find($user->id);
+                $buyer = TelegramUser::lockForUpdate()->find($user->id);
+                $buyerId = $buyer->id;
                 $plan = Plan::query()->lockForUpdate()->findOrFail($request->integer('plan_id'));
-                if ($user->deposit_balance < $plan->price) {
-                    throw ValidationException::withMessages([
-                        'balance' => 'Insufficient balance.',
+
+                if ($buyer->deposit_balance < $plan->price) {
+                    throw ValidationException::withMessages(['balance' => 'Insufficient balance.']);
+                }
+
+                $buyer->decrement('deposit_balance', $plan->price);
+
+                $currentUser = $buyer;
+                foreach ([0.10, 0.05, 0.02] as $rate) {
+                    if (!($currentUser->referred_by > 0) || !($ancestor = TelegramUser::find($currentUser->referred_by))) break;
+
+                    $commission = $plan->price * $rate;
+
+                    $ancestor->incrementEach([
+                        'earning' => $commission,
+                        'wallet_balance' => $commission,
                     ]);
-                }
-                $user->decrement('deposit_balance', $plan->price);
 
-                // check referrer - give commission if user has valid referrer
-                if ($user->referred_by > 0 && ($referrer = TelegramUser::find($user->referred_by))) {
-                    $commission = $plan->price * 0.10;
-                    $referrer->increment('earning', $commission);
-                    $referrer->increment('wallet_balance', $commission);
+                    $currentUser = $ancestor;
                 }
 
-                // Create mining history
                 MiningHistory::create([
-                    'user_id' => $user->id,
+                    'user_id' => $buyerId,
                     'plan_id' => $plan->id,
                     'status' => 'active',
-                    'last_sum' => time(), // Set to current time to prevent balance spike
+                    'last_sum' => time(),
                     'expire_date' => now()->addDays($plan->duration)->timestamp,
                 ]);
             });
@@ -329,8 +338,9 @@ class TelegramAuthController extends Controller
                 'message' => 'Plan purchased successfully.',
             ]);
         } catch (\Exception $e) {
-            Log::error('Failed to get user data', [
+            Log::error('Failed to purchase plan', [
                 'error' => $e->getMessage(),
+                'user_id' => $userId ?? null,
             ]);
 
             return response()->json([
