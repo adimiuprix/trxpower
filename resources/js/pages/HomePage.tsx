@@ -897,7 +897,8 @@ export default function HomePage({ transactions, minimumClaim }: HomePageProps) 
                         <span>1. Select Destination Platform</span>
                     </div>
                     <div className="wallet-provider-grid" id="wallet-provider-selector">
-                        <div className="provider-card active" data-provider="Binance">
+                        
+                        {/* <div className="provider-card active" data-provider="Binance">
                             <div className="provider-logo-wrap binance-wrap">
                                 <img
                                     src="/wallets/binance.svg"
@@ -909,7 +910,7 @@ export default function HomePage({ transactions, minimumClaim }: HomePageProps) 
                             </div>
                             <span className="provider-name">Binance</span>
                             <div className="provider-badge-check">✓</div>
-                        </div>
+                        </div> */}
 
                         <div className="provider-card" data-provider="Trust Wallet">
                             <div className="provider-logo-wrap trust-wrap">
