@@ -18,7 +18,7 @@ export default function ReferralPage() {
 
     // Validasi referral code - jangan buat link jika undefined/null
     const referralLink = reffCode 
-        ? `https://t.me/tronmynerybot/app?startapp=ref_${reffCode}`
+        ? `https://tr0ngram_bot/app?startapp=ref_${reffCode}`
         : '';
 
     const handleCopy = async () => {
