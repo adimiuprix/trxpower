@@ -9,6 +9,7 @@ use App\Models\MiningHistory;
 use App\Models\Plan;
 use App\Models\TelegramUser;
 use App\Models\Transaction;
+use App\Services\DwellirScanService;
 use App\Services\PolygonScanService;
 use App\Services\TelegramAuthService;
 use App\Services\TronService;
@@ -353,8 +354,11 @@ class TelegramAuthController extends Controller
     /**
      * Verify deposit transaction on Polygon blockchain
      */
-    public function verifyDeposit(VerifyDepositRequest $request, PolygonScanService $polygonScanService): JsonResponse
-    {
+    public function verifyDeposit(
+        DwellirScanService $dwellirScanService,
+        VerifyDepositRequest $request, 
+        PolygonScanService $polygonScanService
+    ): JsonResponse {
         $txHash = strtolower($request->input('tx_hash'));
         $expectedAmount = (float) $request->input('expected_amount');
         $user = $request->user();
@@ -379,8 +383,12 @@ class TelegramAuthController extends Controller
                 }
             }
 
+            // Select blockchain provider based on config
+            $provider = config('services.blockchain.provider');
+            $service = $provider === 'dwellir' ? $dwellirScanService : $polygonScanService;
+
             // Verify transaction on blockchain
-            $verification = $polygonScanService->verifyTransaction($txHash);
+            $verification = $service->verifyTransaction($txHash);
 
             if (! $verification['success']) {
                 // Log failed verification
