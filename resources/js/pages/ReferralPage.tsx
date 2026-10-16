@@ -40,7 +40,6 @@ export default function ReferralPage() {
     return (
         <AppLayout>
             <section
-                id="view-referral"
                 className="view-container"
                 style={{ display: 'flex' }}
             >

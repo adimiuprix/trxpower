@@ -663,10 +663,10 @@ export default function HomePage({ transactions, minimumClaim }: HomePageProps) 
 
                 {/* FEATURE GRID CARDS (Task Center & Support) */}
                 <div className="feature-grid-2x2">
-                    {/* 3. Mining Active (Emerald Badge) */}
+                    {/* 3. Task center */}
                     <div
                         className="grid-card"
-                        id="home-card-mining-active"
+                        onClick={() => router.visit('/task')}
                         style={{ cursor: 'pointer' }}
                         title="Buy Mining Packages"
                     >
@@ -681,14 +681,14 @@ export default function HomePage({ transactions, minimumClaim }: HomePageProps) 
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
                             >
-                                <path d="M14.5 2.5L21.5 9.5L19 12L12 5L14.5 2.5Z"></path>
-                                <path d="M13 6L3 16L5 21L10 19L20 9"></path>
-                                <circle cx="12" cy="12" r="1"></circle>
+                                <path d="M9 11L12 14L20 6" />
+                                <path d="M20 12V19C20 20.1 19.1 21 18 21H5C3.9 21 3 20.1 3 19V5C3 3.9 3.9 3 5 3H14" />
+                                <circle cx="19" cy="19" r="3" />
                             </svg>
                         </div>
                         <div className="grid-card-content">
                             <h4>
-                                <span>Mining Active</span>
+                                <span>Bonus Tasks</span>
                                 <svg
                                     width="14"
                                     height="14"
@@ -700,7 +700,7 @@ export default function HomePage({ transactions, minimumClaim }: HomePageProps) 
                                     <polyline points="9 18 15 12 9 6"></polyline>
                                 </svg>
                             </h4>
-                            <p>View active rigs &amp; yield</p>
+                            <p>Complete Tasks & Earn TRX</p>
                         </div>
                     </div>
 

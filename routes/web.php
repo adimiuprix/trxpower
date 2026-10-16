@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TelegramHomeController;
+use App\Http\Controllers\TelegramTaskController;
 use App\Http\Controllers\TelegramMineController;
 use App\Http\Controllers\TelegramProfileController;
 use App\Http\Controllers\TelegramDepositController;
@@ -20,6 +21,7 @@ use App\Http\Controllers\TelegramDepositController;
 // Inertia Pages
 Route::get('/', [TelegramHomeController::class, 'index'])->name('home');
 Route::get('/mine', [TelegramMineController::class, 'index'])->name('mine');
+Route::get('/task', [TelegramTaskController::class, 'index'])->name('task');
 Route::inertia('/mining-active', 'MiningActivePage')->name('mining-active');
 Route::inertia('/referral', 'ReferralPage')->name('referral');
 Route::get('/profile', [TelegramProfileController::class, 'index'])->name('profile');
