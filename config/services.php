@@ -49,6 +49,7 @@ return [
     'telegram' => [
         'token' => env('TELEGRAM_BOT_TOKEN'),
         'application' => env('TELEGRAM_BOT_APP'),
+        'channel' => env('TELEGRAM_CHANNEL'),
     ],
 
     'tron' => [

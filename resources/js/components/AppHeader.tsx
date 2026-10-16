@@ -57,7 +57,7 @@ export default function AppHeader() {
                 </div>
                 <div className="brand-title-group">
                     <h1>
-                        <span className="trx-highlight">TRX</span> Mining
+                        <span className="trx-highlight">Tron</span> Gram
                     </h1>
                     <span className="brand-subtitle">
                         Earn TRX • Fast • Secure

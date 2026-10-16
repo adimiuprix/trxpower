@@ -282,6 +282,10 @@ export default function HomePage({ transactions, minimumClaim }: HomePageProps) 
         setSelectedProvider('Binance');
     }
 
+    const handleJoin = () => {
+        window.open(import.meta.env.VITE_TELEGRAM_CHANNEL, 'noopener,noreferrer');
+    };
+
     return (
         <>
         <AppLayout>
@@ -761,12 +765,11 @@ export default function HomePage({ transactions, minimumClaim }: HomePageProps) 
                         </div>
                     </div>
                     <button
+                        onClick={handleJoin}
                         className="btn-join-channel"
-                        id="btn-join-channel-action"
                     >
-                        <span id="channel-action-label">Join Now</span>
+                        <span>Join Now</span>
                         <svg
-                            id="channel-action-icon"
                             width="14"
                             height="14"
                             viewBox="0 0 24 24"
