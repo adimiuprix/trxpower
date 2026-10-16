@@ -273,7 +273,7 @@ export default function ReferralPage() {
                             id="referral-link"
                             readOnly
                             value={referralLink}
-                            placeholder={reffCode ? referralLink : 'Loading referral link...'}
+                            placeholder="Referral link"
                         />
                         <button 
                             className="btn-copy" 
