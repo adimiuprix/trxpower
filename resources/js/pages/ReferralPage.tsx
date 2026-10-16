@@ -18,7 +18,7 @@ export default function ReferralPage() {
 
     // Validasi referral code - jangan buat link jika undefined/null
     const referralLink = reffCode 
-        ? `https://tr0ngram_bot/app?startapp=ref_${reffCode}`
+        ? `${import.meta.env.VITE_TELEGRAM_BOT_APP}?startapp=ref_${reffCode}`
         : '';
 
     const handleCopy = async () => {
