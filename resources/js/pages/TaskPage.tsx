@@ -192,9 +192,6 @@ export default function TaskPage({ tasks: initialTasks }: TaskPageProps) {
         }
     };
 
-    const totalRewards = tasks.reduce((sum, task) => sum + (task.completed && !task.claimed ? task.reward : 0), 0);
-    const completedCount = tasks.filter(task => task.completed).length;
-
     return (
         <AppLayout>
             <section className="view-container" style={{ display: 'flex' }}>
@@ -203,19 +200,6 @@ export default function TaskPage({ tasks: initialTasks }: TaskPageProps) {
                 <div className="tasks-header-card">
                     <h2>Complete Tasks & Earn TRX</h2>
                     <p>Finish missions to unlock rewards and boost your mining power</p>
-                </div>
-
-                {/* Stats Bar */}
-                <div className="tasks-stats-row">
-                    <div className="tasks-stat-box">
-                        <span className="tasks-stat-label">Completed</span>
-                        <span className="tasks-stat-value">{completedCount}/{tasks.length}</span>
-                    </div>
-                    <div className="tasks-stat-divider"></div>
-                    <div className="tasks-stat-box">
-                        <span className="tasks-stat-label">Available</span>
-                        <span className="tasks-stat-value tasks-stat-highlight">{totalRewards} TRX</span>
-                    </div>
                 </div>
 
                 {/* Daily Tasks Section */}
