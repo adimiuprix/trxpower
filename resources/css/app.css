@@ -7493,6 +7493,12 @@ html[data-theme="dark"] .task-badge-special {
     color: var(--violet-accent);
 }
 
+.task-icon-ads {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+}
+
 .task-icon-social {
     background: rgba(2, 132, 199, 0.1);
     border: 1px solid rgba(2, 132, 199, 0.2);

@@ -22,6 +22,14 @@ class TaskSeeder extends Seeder
                 'task_url' => null,
             ],
             [
+                'title' => 'Watch Ads',
+                'description' => 'Watch ads for earn more rewards',
+                'category' => 'ads',
+                'image' => 'Television',
+                'reward' => 1,
+                'task_url' => null,
+            ],
+            [
                 'title' => 'Join Telegram Channel',
                 'description' => 'Join our official Telegram channel',
                 'category' => 'social',

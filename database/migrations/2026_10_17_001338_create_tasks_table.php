@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('title');
             $table->text('description');
-            $table->enum('category', ['daily', 'social', 'mining', 'referral', 'special', 'other']);
+            $table->enum('category', ['daily', 'ads', 'social', 'mining', 'referral', 'special', 'other']);
             $table->string('image')->nullable();
             $table->decimal('reward', 20, 8)->default(0);
             $table->string('task_url')->nullable();

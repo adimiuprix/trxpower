@@ -1,8 +1,7 @@
 import AppLayout from '@/layouts/AppLayout';
 import { createToaster } from "@codenhub/toaster";
-import { router } from '@inertiajs/react';
 import React, { useState, useEffect } from 'react';
-import { CheckCircle, ExternalLink, Gift, Users, MessageCircle, Share2, Award, Zap, Clock } from 'lucide-react';
+import { CheckCircle, ExternalLink, Gift, Users, MessageCircle, Share2, Award, Zap, Clock, MonitorPlay } from 'lucide-react';
 import { useTelegramContext } from '@/providers/TelegramProvider';
 
 const toaster = createToaster({
@@ -12,7 +11,7 @@ const toaster = createToaster({
 
 interface Task {
     id: string;
-    category: 'daily' | 'social' | 'referral' | 'special';
+    category: 'daily' | 'ads' | 'social' | 'referral' | 'special';
     title: string;
     description: string;
     reward: number;
@@ -47,6 +46,7 @@ const iconMap: Record<string, any> = {
     Users,
     Zap,
     Award,
+    MonitorPlay
 };
 
 export default function TaskPage({ tasks: initialTasks }: TaskPageProps) {
@@ -234,6 +234,29 @@ export default function TaskPage({ tasks: initialTasks }: TaskPageProps) {
 
                     <div className="task-list">
                         {tasks.filter(task => task.category === 'daily').map(task => (
+                            <TaskCard
+                                key={task.id}
+                                task={task}
+                                onCheck={handleCheckTask}
+                                onClaim={handleClaimReward}
+                                loading={loading === task.id}
+                            />
+                        ))}
+                    </div>
+                </div>
+
+                {/* Watch Ads Section */}
+                <div className="task-section">
+                    <div className="task-section-header">
+                        <h3 className="task-section-title">Watch Ads</h3>
+                        <span className="task-section-badge">
+                            {tasks.filter(t => t.category === 'ads' && t.completed).length}/
+                            {tasks.filter(t => t.category === 'ads').length}
+                        </span>
+                    </div>
+
+                    <div className="task-list">
+                        {tasks.filter(task => task.category === 'ads').map(task => (
                             <TaskCard
                                 key={task.id}
                                 task={task}
