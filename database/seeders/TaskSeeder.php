@@ -18,7 +18,7 @@ class TaskSeeder extends Seeder
                 'description' => 'Check in daily to earn rewards',
                 'category' => 'daily',
                 'image' => 'Gift',
-                'reward' => 100,
+                'reward' => 1,
                 'task_url' => null,
             ],
             [
@@ -26,23 +26,15 @@ class TaskSeeder extends Seeder
                 'description' => 'Join our official Telegram channel',
                 'category' => 'social',
                 'image' => 'MessageCircle',
-                'reward' => 500,
+                'reward' => 1,
                 'task_url' => 'https://t.me/trxpower',
-            ],
-            [
-                'title' => 'Follow Twitter',
-                'description' => 'Follow us on Twitter for updates',
-                'category' => 'social',
-                'image' => 'Twitter',
-                'reward' => 500,
-                'task_url' => 'https://twitter.com/trxpower',
             ],
             [
                 'title' => 'Complete Mining Session',
                 'description' => 'Complete a 24-hour mining session',
                 'category' => 'mining',
                 'image' => 'Zap',
-                'reward' => 1000,
+                'reward' => 2,
                 'task_url' => null,
             ],
             [
@@ -50,7 +42,7 @@ class TaskSeeder extends Seeder
                 'description' => 'Invite 5 friends to join TRX Power',
                 'category' => 'referral',
                 'image' => 'Users',
-                'reward' => 2500,
+                'reward' => 2,
                 'task_url' => null,
             ],
             [
@@ -58,7 +50,7 @@ class TaskSeeder extends Seeder
                 'description' => 'Make your first USDT deposit',
                 'category' => 'special',
                 'image' => 'DollarSign',
-                'reward' => 5000,
+                'reward' => 3,
                 'task_url' => null,
             ],
         ];

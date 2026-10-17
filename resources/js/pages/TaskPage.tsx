@@ -178,7 +178,6 @@ export default function TaskPage({ tasks: initialTasks }: TaskPageProps) {
                 toaster.semantic.success(`Reward claimed! +${data.data.reward} TRX. Wallet balance: ${data.data.new_wallet_balance} TRX`);
             } else {
                 toaster.semantic.error(data.message || 'Failed to claim reward');
-                alert(data.message || 'Failed to claim reward');
             }
         } catch (error) {
             console.error('Error claiming reward:', error);
@@ -348,7 +347,7 @@ function TaskCard({ task, onCheck, onClaim, loading }: TaskCardProps) {
             <div className="task-card-right">
                 <div className="task-reward-box">
                     <span className="task-reward-label">Reward</span>
-                    <span className="task-reward-amount">+{task.reward} TRX</span>
+                    <span className="task-reward-amount">+{Number(task.reward).toFixed(4)} TRX</span>
                 </div>
                 
                 {task.claimed ? (

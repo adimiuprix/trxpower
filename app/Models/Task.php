@@ -27,7 +27,7 @@ class Task extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'reward' => 'integer',
+        'reward' => 'decimal:4',
     ];
 
     /**
