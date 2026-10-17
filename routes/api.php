@@ -38,6 +38,12 @@ Route::prefix('telegram')->name('telegram.')->group(function () {
         Route::post('/verify-transaction', [TelegramAuthController::class, 'verifyDeposit'])->name('verify');
         Route::post('/withdraw', [TelegramAuthController::class, 'withdraw'])->name('withdraw');
         Route::post('/process-withdrawal/{transaction}', [TelegramAuthController::class, 'processWithdrawal'])->name('process-withdrawal');
+        
+        // Task endpoints
+        Route::get('/tasks/status', [TelegramAuthController::class, 'getTaskStatus'])->name('tasks.status');
+        Route::post('/tasks/{taskId}/submit', [TelegramAuthController::class, 'submitTask'])->name('tasks.submit');
+        Route::post('/tasks/{taskId}/claim', [TelegramAuthController::class, 'claimTaskReward'])->name('tasks.claim');
+        
         Route::post('/logout', [TelegramAuthController::class, 'logout'])->name('logout');
     });
 });

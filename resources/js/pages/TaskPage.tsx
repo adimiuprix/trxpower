@@ -1,6 +1,12 @@
 import AppLayout from '@/layouts/AppLayout';
-import { useState } from 'react';
+import { createToaster } from "@codenhub/toaster";
+import React, { useState } from 'react';
 import { CheckCircle, ExternalLink, Gift, Users, MessageCircle, Share2, Award, Zap } from 'lucide-react';
+
+const toaster = createToaster({
+    position: "top-center",
+    duration: 3000,
+});
 
 interface Task {
     id: string;
@@ -8,111 +14,178 @@ interface Task {
     title: string;
     description: string;
     reward: number;
-    icon: any;
-    link?: string;
+    icon: string;
+    link?: string | null;
     completed: boolean;
     claimed: boolean;
     progress?: {
         current: number;
         target: number;
-    };
+    } | null;
 }
 
-export default function TaskPage() {
-    const [tasks, setTasks] = useState<Task[]>([
-        {
-            id: '1',
-            category: 'daily',
-            title: 'Daily Login Bonus',
-            description: 'Login to the app today',
-            reward: 50,
-            icon: Gift,
-            completed: true,
-            claimed: false,
-        },
-        {
-            id: '2',
-            category: 'social',
-            title: 'Join Telegram Channel',
-            description: 'Subscribe to our official channel',
-            reward: 500,
-            icon: MessageCircle,
-            link: 'https://t.me/trxpower',
-            completed: false,
-            claimed: false,
-        },
-        {
-            id: '3',
-            category: 'social',
-            title: 'Follow Twitter Account',
-            description: 'Follow @TRXPower on Twitter',
-            reward: 300,
-            icon: Share2,
-            link: 'https://twitter.com/trxpower',
-            completed: false,
-            claimed: false,
-        },
-        {
-            id: '4',
-            category: 'referral',
-            title: 'Invite 5 Friends',
-            description: 'Share your referral link',
-            reward: 1000,
-            icon: Users,
-            completed: false,
-            claimed: false,
-            progress: {
-                current: 2,
-                target: 5,
-            },
-        },
-        {
-            id: '5',
-            category: 'special',
-            title: 'First Deposit Bonus',
-            description: 'Make your first deposit',
-            reward: 2000,
-            icon: Zap,
-            completed: false,
-            claimed: false,
-        },
-        {
-            id: '6',
-            category: 'daily',
-            title: 'Complete 3 Mining Sessions',
-            description: 'Mine TRX 3 times today',
-            reward: 100,
-            icon: Award,
-            completed: false,
-            claimed: false,
-            progress: {
-                current: 1,
-                target: 3,
-            },
-        },
-    ]);
+interface TaskPageProps {
+    tasks: Task[];
+}
 
-    const handleCheckTask = (taskId: string, link?: string) => {
+// Icon mapping
+const iconMap: Record<string, any> = {
+    Gift,
+    MessageCircle,
+    Share2,
+    Users,
+    Zap,
+    Award,
+};
+
+export default function TaskPage({ tasks: initialTasks }: TaskPageProps) {
+    const [tasks, setTasks] = useState<Task[]>(initialTasks);
+    const [loading, setLoading] = useState<string | null>(null);
+
+    // Fetch task status saat component mount
+    const fetchTaskStatus = async () => {
+        try {
+            const token = localStorage.getItem('telegram_auth_token');
+            
+            if (!token) {
+                console.log('No token found');
+                return;
+            }
+            
+            const response = await fetch('/api/telegram/tasks/status', {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            const data = await response.json();
+            console.log('Task status response:', data); // Debug log
+
+            if (data.success) {
+                // Update tasks dengan status dari backend
+                setTasks(prevTasks =>
+                    prevTasks.map(task => {
+                        const status = data.data.task_status[task.id];
+                        const progress = data.data.task_progress[task.id];
+                        
+                        console.log(`Task ${task.id} status:`, status); // Debug per task
+                        
+                        return {
+                            ...task,
+                            completed: status?.completed || false,
+                            claimed: status?.claimed || false,
+                            progress: progress || task.progress,
+                        };
+                    })
+                );
+            } else {
+                console.error('Failed to fetch task status:', data);
+            }
+        } catch (error) {
+            console.error('Error fetching task status:', error);
+        }
+    };
+
+    // Fetch status saat component mount
+    React.useEffect(() => {
+        fetchTaskStatus();
+    }, []);
+
+    const handleCheckTask = async (taskId: string, link?: string | null) => {
         if (link) {
             window.open(link, '_blank');
         }
         
-        // Simulate task completion check
-        setTimeout(() => {
-            setTasks(prevTasks =>
-                prevTasks.map(task =>
-                    task.id === taskId ? { ...task, completed: true } : task
-                )
-            );
-        }, 1000);
+        try {
+            setLoading(taskId);
+            
+            // Take token from telegramAuthService
+            const token = localStorage.getItem('telegram_auth_token');
+            
+            if (!token) {
+                toaster.semantic.error('Please login first');
+                return;
+            }
+            
+            // Submit task ke backend
+            const response = await fetch(`/api/telegram/tasks/${taskId}/submit`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            const data = await response.json();
+            
+            console.log('Submit response:', data); // Debug log
+
+            if (data.success) {
+                // Update task status ke completed (approved)
+                setTasks(prevTasks =>
+                    prevTasks.map(task =>
+                        task.id === taskId ? { ...task, completed: true } : task
+                    )
+                );
+                
+                toaster.semantic.success(data.message || 'Task completed successfully!');
+            } else {
+                toaster.semantic.error(data.message || 'Failed to submit task');
+            }
+        } catch (error) {
+            console.error('Error submitting task:', error);
+            toaster.semantic.error('Failed to submit task. Please try again.');
+        } finally {
+            setLoading(null);
+        }
     };
 
-    const handleClaimReward = (taskId: string) => {
-        setTasks(prevTasks =>
-            prevTasks.map(task =>
-                task.id === taskId ? { ...task, claimed: true } : task
-            )
-        );
+    const handleClaimReward = async (taskId: string) => {
+        try {
+            setLoading(taskId);
+            
+            // Take token from telegramAuthService
+            const token = localStorage.getItem('telegram_auth_token');
+            
+            if (!token) {
+                toaster.semantic.error('Please login first');
+                return;
+            }
+            
+            // Claim reward dari backend
+            const response = await fetch(`/api/telegram/tasks/${taskId}/claim`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                // Update task status ke claimed
+                setTasks(prevTasks =>
+                    prevTasks.map(task =>
+                        task.id === taskId ? { ...task, claimed: true } : task
+                    )
+                );
+                
+                toaster.semantic.success(`Reward claimed! +${data.data.reward} TRX. Wallet balance: ${data.data.new_wallet_balance} TRX`);
+            } else {
+                toaster.semantic.error(data.message || 'Failed to claim reward');
+                alert(data.message || 'Failed to claim reward');
+            }
+        } catch (error) {
+            console.error('Error claiming reward:', error);
+            toaster.semantic.error('Failed to claim reward. Please try again.');
+        } finally {
+            setLoading(null);
+        }
     };
 
     const totalRewards = tasks.reduce((sum, task) => sum + (task.completed && !task.claimed ? task.reward : 0), 0);
@@ -158,6 +231,7 @@ export default function TaskPage() {
                                 task={task}
                                 onCheck={handleCheckTask}
                                 onClaim={handleClaimReward}
+                                loading={loading === task.id}
                             />
                         ))}
                     </div>
@@ -180,6 +254,7 @@ export default function TaskPage() {
                                 task={task}
                                 onCheck={handleCheckTask}
                                 onClaim={handleClaimReward}
+                                loading={loading === task.id}
                             />
                         ))}
                     </div>
@@ -202,6 +277,7 @@ export default function TaskPage() {
                                 task={task}
                                 onCheck={handleCheckTask}
                                 onClaim={handleClaimReward}
+                                loading={loading === task.id}
                             />
                         ))}
                     </div>
@@ -221,6 +297,7 @@ export default function TaskPage() {
                                 task={task}
                                 onCheck={handleCheckTask}
                                 onClaim={handleClaimReward}
+                                loading={loading === task.id}
                             />
                         ))}
                     </div>
@@ -233,12 +310,13 @@ export default function TaskPage() {
 
 interface TaskCardProps {
     task: Task;
-    onCheck: (taskId: string, link?: string) => void;
+    onCheck: (taskId: string, link?: string | null) => void;
     onClaim: (taskId: string) => void;
+    loading?: boolean;
 }
 
-function TaskCard({ task, onCheck, onClaim }: TaskCardProps) {
-    const Icon = task.icon;
+function TaskCard({ task, onCheck, onClaim, loading }: TaskCardProps) {
+    const Icon = iconMap[task.icon] || Gift;
     
     return (
         <div className={`task-card ${task.completed ? 'task-completed' : ''} ${task.claimed ? 'task-claimed' : ''}`}>
@@ -282,24 +360,26 @@ function TaskCard({ task, onCheck, onClaim }: TaskCardProps) {
                     <button 
                         className="task-btn task-btn-claim"
                         onClick={() => onClaim(task.id)}
+                        disabled={loading}
                     >
                         <Gift size={16} strokeWidth={2.5} />
-                        Claim
+                        {loading ? 'Processing...' : 'Claim'}
                     </button>
                 ) : (
                     <button 
                         className="task-btn task-btn-check"
                         onClick={() => onCheck(task.id, task.link)}
+                        disabled={loading}
                     >
                         {task.link ? (
                             <>
                                 <ExternalLink size={16} strokeWidth={2.5} />
-                                Go
+                                {loading ? 'Processing...' : 'Go'}
                             </>
                         ) : (
                             <>
                                 <CheckCircle size={16} strokeWidth={2.5} />
-                                Check
+                                {loading ? 'Processing...' : 'Check'}
                             </>
                         )}
                     </button>
