@@ -39,24 +39,23 @@ class Task extends Model
     }
 
     /**
-     * Check if user has completed this task.
+     * Check if user has completed (submitted) this task.
      */
     public function isCompletedBy(int $userId): bool
     {
         return $this->submissions()
             ->where('user_id', $userId)
-            ->where('status', 'approved')
             ->exists();
     }
 
     /**
-     * Check if user has pending submission for this task.
+     * Check if user has claimed reward for this task.
      */
-    public function hasPendingSubmission(int $userId): bool
+    public function isClaimedBy(int $userId): bool
     {
         return $this->submissions()
             ->where('user_id', $userId)
-            ->where('status', 'pending')
+            ->where('is_claimed', true)
             ->exists();
     }
 

@@ -58,12 +58,12 @@ export default function TaskPage({ tasks: initialTasks }: TaskPageProps) {
     const fetchTaskStatus = async () => {
         try {
             const token = localStorage.getItem('telegram_auth_token');
-            
+
             if (!token) {
                 console.log('No token found');
                 return;
             }
-            
+
             const response = await fetch('/api/telegram/tasks/status', {
                 method: 'GET',
                 headers: {
@@ -81,9 +81,9 @@ export default function TaskPage({ tasks: initialTasks }: TaskPageProps) {
                     prevTasks.map(task => {
                         const status = data.data.task_status[task.id];
                         const progress = data.data.task_progress[task.id];
-                        
+
                         console.log(`Task ${task.id} status:`, status); // Debug per task
-                        
+
                         return {
                             ...task,
                             completed: status?.completed || false,
@@ -103,12 +103,12 @@ export default function TaskPage({ tasks: initialTasks }: TaskPageProps) {
     // Fetch task status saat component mount
     React.useEffect(() => {
         fetchTaskStatus();
-        
+
         // Auto-refresh setiap 1 menit untuk check reset
         const interval = setInterval(() => {
             fetchTaskStatus();
         }, 60000); // 60 seconds
-        
+
         return () => clearInterval(interval);
     }, []);
 
@@ -118,19 +118,19 @@ export default function TaskPage({ tasks: initialTasks }: TaskPageProps) {
             window.open(link, '_blank');
             toaster.semantic.info('Opening channel... We will verify your membership shortly.');
         }
-        
+
         // Submit task ke backend untuk verification (baik dengan atau tanpa link)
         try {
             setLoading(taskId);
-            
+
             // Take token from telegramAuthService
             const token = localStorage.getItem('telegram_auth_token');
-            
+
             if (!token) {
                 toaster.semantic.error('Please login first');
                 return;
             }
-            
+
             // Submit task ke backend
             const response = await fetch(`/api/telegram/tasks/${taskId}/submit`, {
                 method: 'POST',
@@ -142,7 +142,7 @@ export default function TaskPage({ tasks: initialTasks }: TaskPageProps) {
             });
 
             const data = await response.json();
-            
+
             console.log('Submit response:', data); // Debug log
 
             if (data.success) {
@@ -152,7 +152,7 @@ export default function TaskPage({ tasks: initialTasks }: TaskPageProps) {
                         task.id === taskId ? { ...task, completed: true } : task
                     )
                 );
-                
+
                 toaster.semantic.success(data.message || 'Task completed successfully!');
             } else {
                 toaster.semantic.error(data.message || 'Failed to submit task');
@@ -168,15 +168,15 @@ export default function TaskPage({ tasks: initialTasks }: TaskPageProps) {
     const handleClaimReward = async (taskId: string) => {
         try {
             setLoading(taskId);
-            
+
             // Take token from telegramAuthService
             const token = localStorage.getItem('telegram_auth_token');
-            
+
             if (!token) {
                 toaster.semantic.error('Please login first');
                 return;
             }
-            
+
             // Claim reward dari backend
             const response = await fetch(`/api/telegram/tasks/${taskId}/claim`, {
                 method: 'POST',
@@ -196,9 +196,9 @@ export default function TaskPage({ tasks: initialTasks }: TaskPageProps) {
                         task.id === taskId ? { ...task, claimed: true } : task
                     )
                 );
-                
+
                 toaster.semantic.success(`Reward claimed! +${data.data.reward} TRX. Wallet balance: ${data.data.new_wallet_balance} TRX`);
-                
+
                 // Refresh dbUser untuk update wallet_balance di context
                 await refreshDbUser();
             } else {
@@ -215,7 +215,7 @@ export default function TaskPage({ tasks: initialTasks }: TaskPageProps) {
     return (
         <AppLayout>
             <section className="view-container" style={{ display: 'flex' }}>
-                
+
                 {/* Tasks Header Card */}
                 <div className="tasks-header-card">
                     <h2>Complete Tasks & Earn TRX</h2>
@@ -231,7 +231,7 @@ export default function TaskPage({ tasks: initialTasks }: TaskPageProps) {
                             {tasks.filter(t => t.category === 'daily').length}
                         </span>
                     </div>
-                    
+
                     <div className="task-list">
                         {tasks.filter(task => task.category === 'daily').map(task => (
                             <TaskCard
@@ -254,7 +254,7 @@ export default function TaskPage({ tasks: initialTasks }: TaskPageProps) {
                             {tasks.filter(t => t.category === 'social').length}
                         </span>
                     </div>
-                    
+
                     <div className="task-list">
                         {tasks.filter(task => task.category === 'social').map(task => (
                             <TaskCard
@@ -277,7 +277,7 @@ export default function TaskPage({ tasks: initialTasks }: TaskPageProps) {
                             {tasks.filter(t => t.category === 'referral').length}
                         </span>
                     </div>
-                    
+
                     <div className="task-list">
                         {tasks.filter(task => task.category === 'referral').map(task => (
                             <TaskCard
@@ -297,7 +297,7 @@ export default function TaskPage({ tasks: initialTasks }: TaskPageProps) {
                         <h3 className="task-section-title">Special Tasks</h3>
                         <span className="task-section-badge task-badge-special">Limited</span>
                     </div>
-                    
+
                     <div className="task-list">
                         {tasks.filter(task => task.category === 'special').map(task => (
                             <TaskCard
@@ -319,24 +319,24 @@ export default function TaskPage({ tasks: initialTasks }: TaskPageProps) {
 function TaskCard({ task, onCheck, onClaim, loading }: TaskCardProps) {
     const Icon = iconMap[task.icon] || Gift;
     const [timeUntilReset, setTimeUntilReset] = useState<string>('');
-    
+
     // Countdown timer untuk daily tasks
     useEffect(() => {
         if (!task.next_reset || !task.claimed) return;
-        
+
         const updateTimer = () => {
             const now = Math.floor(Date.now() / 1000); // Current unix timestamp
             const diff = task.next_reset! - now;
-            
+
             if (diff <= 0) {
                 setTimeUntilReset('Ready!');
                 return;
             }
-            
+
             const hours = Math.floor(diff / 3600);
             const minutes = Math.floor((diff % 3600) / 60);
             const seconds = diff % 60;
-            
+
             if (hours > 0) {
                 setTimeUntilReset(`${hours}h ${minutes}m`);
             } else if (minutes > 0) {
@@ -345,31 +345,24 @@ function TaskCard({ task, onCheck, onClaim, loading }: TaskCardProps) {
                 setTimeUntilReset(`${seconds}s`);
             }
         };
-        
+
         updateTimer(); // Initial update
         const interval = setInterval(updateTimer, 1000);
-        
+
         return () => clearInterval(interval);
     }, [task.next_reset, task.claimed]);
 
-    const handleClickUrl = () => {
-        console.log(task)
-        if (task?.link) {
-            window.open(task.link, '_blank');
-        }
-    }
-    
     return (
         <div className={`task-card ${task.completed ? 'task-completed' : ''} ${task.claimed ? 'task-claimed' : ''}`}>
             <div className="task-card-left">
                 <div className={`task-icon-circle task-icon-${task.category}`}>
                     <Icon size={20} strokeWidth={2.5} />
                 </div>
-                
+
                 <div className="task-info">
 
                     {task.category === 'social' ? (
-                        <h4 className="task-title" style={{ cursor: 'pointer' }} onClick={handleClickUrl}>
+                        <h4 className="task-title">
                             {task.title}
                             <svg
                                 width="14"
@@ -390,12 +383,12 @@ function TaskCard({ task, onCheck, onClaim, loading }: TaskCardProps) {
                     )}
 
                     <p className="task-description">{task.description}</p>
-                    
+
                     {task.progress && (
                         <div className="task-progress-row">
                             <div className="task-progress-bar">
-                                <div 
-                                    className="task-progress-fill" 
+                                <div
+                                    className="task-progress-fill"
                                     style={{ width: `${(task.progress.current / task.progress.target) * 100}%` }}
                                 ></div>
                             </div>
@@ -406,13 +399,13 @@ function TaskCard({ task, onCheck, onClaim, loading }: TaskCardProps) {
                     )}
                 </div>
             </div>
-            
+
             <div className="task-card-right">
                 <div className="task-reward-box">
                     <span className="task-reward-label">Reward</span>
                     <span className="task-reward-amount">+{Number(task.reward).toFixed(4)} TRX</span>
                 </div>
-                
+
                 {/* Show reset timer for claimed daily tasks */}
                 {task.claimed && task.can_reset && task.next_reset && (
                     <div className="task-reset-timer" style={{
@@ -427,14 +420,14 @@ function TaskCard({ task, onCheck, onClaim, loading }: TaskCardProps) {
                         <span>Reset in: {timeUntilReset}</span>
                     </div>
                 )}
-                
+
                 {task.claimed ? (
                     <button className="task-btn task-btn-claimed" disabled>
                         <CheckCircle size={16} strokeWidth={2.5} />
                         Claimed
                     </button>
                 ) : task.completed ? (
-                    <button 
+                    <button
                         className="task-btn task-btn-claim"
                         onClick={() => onClaim(task.id)}
                         disabled={loading}
@@ -443,7 +436,7 @@ function TaskCard({ task, onCheck, onClaim, loading }: TaskCardProps) {
                         {loading ? 'Processing...' : 'Claim'}
                     </button>
                 ) : (
-                    <button 
+                    <button
                         className="task-btn task-btn-check"
                         onClick={() => onCheck(task.id, task.link)}
                         disabled={loading}
