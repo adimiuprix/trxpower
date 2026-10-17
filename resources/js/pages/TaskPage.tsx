@@ -371,6 +371,19 @@ function TaskCard({ task, onCheck, onClaim, loading }: TaskCardProps) {
                     {task.category === 'social' ? (
                         <h4 className="task-title" style={{ cursor: 'pointer' }} onClick={handleClickUrl}>
                             {task.title}
+                            <svg
+                                width="14"
+                                height="14"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                            >
+                                <path d="M7 17 17 7" />
+                                <path d="M7 7h10v10" />
+                            </svg>
                         </h4>
                     ) : (
                         <h4 className="task-title">{task.title}</h4>
