@@ -661,73 +661,35 @@ class TelegramAuthController extends Controller
     /**
      * Get task status for authenticated user
      */
+
     public function getTaskStatus(Request $request): JsonResponse
     {
         try {
             $user = $request->user('sanctum');
+            if (!$user) return response()->json(['success' => false, 'message' => 'Unauthenticated'], 401);
 
-            if (!$user) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Unauthenticated',
-                ], 401);
-            }
-
-            // Fetch user submissions
-            $userSubmissions = \App\Models\TaskSubmission::where('user_id', $user->id)
-                ->get()
-                ->keyBy('task_id');
-
-            // Build status untuk semua tasks
-            $taskStatus = [];
+            $userSubmissions = \App\Models\TaskSubmission::where('user_id', $user->id)->get()->keyBy('task_id');
             $allTasks = \App\Models\Task::all();
+            $taskStatus = [];
 
             foreach ($allTasks as $task) {
-                $taskId = $task->id;
-                $submission = $userSubmissions->get($taskId);
-
-                if ($submission) {
-                    if ($submission->isClaimed()) {
-                        // Task sudah claimed
-                        $taskStatus[$taskId] = [
-                            'completed' => true,
-                            'claimed' => true,
-                        ];
-                    } else {
-                        // Task completed tapi belum claimed
-                        $taskStatus[$taskId] = [
-                            'completed' => true,
-                            'claimed' => false,
-                        ];
-                    }
-                } else {
-                    // Belum complete
-                    $taskStatus[$taskId] = [
-                        'completed' => false,
-                        'claimed' => false,
-                    ];
-                }
+                $submission = $userSubmissions->get($task->id);
+                $taskStatus[$task->id] = [
+                    'completed' => (bool) $submission,
+                    'claimed' => $submission?->isClaimed() ?? false,
+                ];
             }
 
-            // Data progress untuk task tertentu
             $referralCount = \App\Models\TelegramUser::where('referred_by', $user->id)->count();
-            
             $taskProgress = [];
-            foreach ($allTasks as $task) {
-                if ($task->title === 'Invite 5 Friends') {
-                    $taskProgress[$task->id] = [
-                        'current' => $referralCount,
-                        'target' => 5,
-                    ];
-                }
+
+            foreach ($allTasks->where('title', 'Invite 5 Friends') as $task) {
+                $taskProgress[$task->id] = ['current' => $referralCount, 'target' => 5];
             }
 
             return response()->json([
                 'success' => true,
-                'data' => [
-                    'task_status' => $taskStatus,
-                    'task_progress' => $taskProgress,
-                ],
+                'data' => ['task_status' => $taskStatus, 'task_progress' => $taskProgress],
             ]);
         } catch (\Exception $e) {
             Log::error('Failed to get task status', [
@@ -736,10 +698,7 @@ class TelegramAuthController extends Controller
                 'trace' => $e->getTraceAsString(),
             ]);
 
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to get task status.',
-            ], 500);
+            return response()->json(['success' => false, 'message' => 'Failed to get task status.'], 500);
         }
     }
 
@@ -750,75 +709,42 @@ class TelegramAuthController extends Controller
     {
         try {
             $user = $request->user('sanctum');
+            if (!$user) return response()->json(['success' => false, 'message' => 'Unauthenticated'], 401);
 
-            if (!$user) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Unauthenticated',
-                ], 401);
-            }
-
-            // Validate task exists
             $task = \App\Models\Task::findOrFail($taskId);
-
-            // Check if user already completed this task
-            $existingSubmission = \App\Models\TaskSubmission::where('user_id', $user->id)
-                ->where('task_id', $taskId)
-                ->first();
+            $existingSubmission = \App\Models\TaskSubmission::where('user_id', $user->id)->where('task_id', $taskId)->first();
 
             if ($existingSubmission) {
                 if ($existingSubmission->isClaimed()) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'You have already claimed this task reward.',
-                    ], 409);
+                    return response()->json(['success' => false, 'message' => 'You have already claimed this task reward.'], 409);
                 }
 
-                // Task already completed, can claim
                 return response()->json([
                     'success' => true,
                     'message' => 'Task already completed. You can claim the reward now.',
                     'data' => [
                         'submission_id' => $existingSubmission->id,
-                        'task' => [
-                            'id' => $task->id,
-                            'title' => $task->title,
-                            'reward' => $task->reward,
-                        ],
+                        'task' => ['id' => $task->id, 'title' => $task->title, 'reward' => $task->reward],
                     ],
                 ]);
             }
 
-            // Create new submission (completed, not claimed yet)
             $submission = \App\Models\TaskSubmission::create([
-                'user_id' => $user->id,
-                'task_id' => $taskId,
-                'is_claimed' => false,
+                'user_id' => $user->id, 'task_id' => $taskId, 'is_claimed' => false,
             ]);
 
-            Log::info('Task completed', [
-                'user_id' => $user->id,
-                'task_id' => $taskId,
-                'submission_id' => $submission->id,
-            ]);
+            Log::info('Task completed', ['user_id' => $user->id, 'task_id' => $taskId, 'submission_id' => $submission->id]);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Task completed! You can claim the reward now.',
                 'data' => [
                     'submission_id' => $submission->id,
-                    'task' => [
-                        'id' => $task->id,
-                        'title' => $task->title,
-                        'reward' => $task->reward,
-                    ],
+                    'task' => ['id' => $task->id, 'title' => $task->title, 'reward' => $task->reward],
                 ],
             ]);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Task not found.',
-            ], 404);
+            return response()->json(['success' => false, 'message' => 'Task not found.'], 404);
         } catch (\Exception $e) {
             Log::error('Task submission failed', [
                 'user_id' => $request->user('sanctum')->id ?? null,
@@ -827,10 +753,7 @@ class TelegramAuthController extends Controller
                 'trace' => $e->getTraceAsString(),
             ]);
 
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to submit task. Please try again.',
-            ], 500);
+            return response()->json(['success' => false, 'message' => 'Failed to submit task. Please try again.'], 500);
         }
     }
 
@@ -843,47 +766,29 @@ class TelegramAuthController extends Controller
             $user = $request->user('sanctum');
 
             if (!$user) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Unauthenticated',
-                ], 401);
+                return response()->json(['success' => false, 'message' => 'Unauthenticated'], 401);
             }
 
-            // Find unclaimed submission
             $submission = \App\Models\TaskSubmission::where('user_id', $user->id)
-                ->where('task_id', $taskId)
-                ->where('is_claimed', false)
-                ->with('task')
-                ->firstOrFail();
+                ->where('task_id', $taskId)->where('is_claimed', false)
+                ->with('task')->firstOrFail();
 
             $task = $submission->task;
 
-            DB::beginTransaction();
-            try {
-                // Credit reward to user wallet_balance (not balance)
+            DB::transaction(function () use ($user, $submission, $task) {
                 $user->increment('wallet_balance', $task->reward);
-
-                // Mark submission as claimed
                 $submission->markAsClaimed();
+            });
 
-                DB::commit();
-
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Reward claimed successfully!',
-                    'data' => [
-                        'reward' => $task->reward,
-                        'new_wallet_balance' => $user->fresh()->wallet_balance,
-                        'task' => [
-                            'id' => $task->id,
-                            'title' => $task->title,
-                        ],
-                    ],
-                ]);
-            } catch (\Exception $e) {
-                DB::rollBack();
-                throw $e;
-            }
+            return response()->json([
+                'success' => true,
+                'message' => 'Reward claimed successfully!',
+                'data' => [
+                    'reward' => $task->reward,
+                    'new_wallet_balance' => $user->fresh()->wallet_balance,
+                    'task' => ['id' => $task->id, 'title' => $task->title],
+                ],
+            ]);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response()->json([
                 'success' => false,
