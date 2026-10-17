@@ -20,7 +20,7 @@ class TelegramAuthService
             return true;
         }
 
-        $botToken = config('telegram.bot_token');
+        $botToken = config('services.telegram.token');
 
         if (empty($botToken)) {
             if (app()->environment('local')) {

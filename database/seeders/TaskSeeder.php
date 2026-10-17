@@ -27,15 +27,7 @@ class TaskSeeder extends Seeder
                 'category' => 'social',
                 'image' => 'MessageCircle',
                 'reward' => 1,
-                'task_url' => 'https://t.me/trxpower',
-            ],
-            [
-                'title' => 'Complete Mining Session',
-                'description' => 'Complete a 24-hour mining session',
-                'category' => 'mining',
-                'image' => 'Zap',
-                'reward' => 2,
-                'task_url' => null,
+                'task_url' => 'https://t.me/trongram_channel',
             ],
             [
                 'title' => 'Invite 5 Friends',

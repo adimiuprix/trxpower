@@ -16,6 +16,7 @@ use App\Services\TronService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
@@ -759,6 +760,24 @@ class TelegramAuthController extends Controller
                 ]);
             }
 
+            // Verify social task jika category = social
+            if ($task->category === 'social' && $task->task_url) {
+                $verified = $this->verifyTelegramChannelTask($user->telegram_id, $task->task_url);
+                
+                if (!$verified['success']) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => $verified['message'] ?? 'Please join the channel first before completing this task.',
+                    ], 400);
+                }
+                
+                Log::info('Social task verified', [
+                    'user_id' => $user->id,
+                    'task_id' => $taskId,
+                    'telegram_id' => $user->telegram_id,
+                ]);
+            }
+
             $submission = \App\Models\TaskSubmission::create([
                 'user_id' => $user->id, 'task_id' => $taskId, 'is_claimed' => false,
             ]);
@@ -847,5 +866,90 @@ class TelegramAuthController extends Controller
                 'message' => 'Failed to claim reward. Please try again.',
             ], 500);
         }
+    }
+
+    /**
+     * Verify if user has joined Telegram channel/group
+     */
+    protected function verifyTelegramChannelTask(string $telegramId, string $taskUrl): array
+    {
+        try {
+            // Extract channel username from URL
+            // https://t.me/trxpower → @trxpower
+            $channelUsername = $this->extractChannelUsername($taskUrl);
+            
+            if (!$channelUsername) {
+                return ['success' => false, 'message' => 'Invalid channel URL'];
+            }
+
+            // Get Telegram Bot Token from config
+            $botToken = config('services.telegram.token');
+            
+            if (!$botToken) {
+                // Fallback: Auto-approve jika bot token tidak tersedia
+                Log::warning('Telegram bot token not configured, auto-approving social task');
+                return ['success' => true, 'message' => 'Verification skipped (no bot token)'];
+            }
+
+            // Call Telegram API: getChatMember
+            $apiUrl = "https://api.telegram.org/bot{$botToken}/getChatMember";
+            $response = Http::get($apiUrl, [
+                'chat_id' => $channelUsername,
+                'user_id' => $telegramId,
+            ]);
+
+            $data = $response->json();
+
+            // Check if user is member
+            if ($data['ok'] ?? false) {
+                $status = $data['result']['status'] ?? '';
+                
+                // Valid statuses: member, administrator, creator
+                if (in_array($status, ['member', 'administrator', 'creator'])) {
+                    return ['success' => true, 'message' => 'Channel membership verified'];
+                }
+                
+                return ['success' => false, 'message' => 'Please join the channel first'];
+            }
+
+            // API error
+            Log::error('Telegram API verification failed', [
+                'telegram_id' => $telegramId,
+                'channel' => $channelUsername,
+                'error_code' => $data['error_code'] ?? 0,
+                'description' => $data['description'] ?? 'Unknown error',
+                'response' => $data,
+                'hint' => $data['error_code'] === 401 
+                    ? 'Bot token is invalid. Check TELEGRAM_BOT_TOKEN in .env'
+                    : ($data['error_code'] === 400 
+                        ? 'Bot is not admin in channel. Add bot to channel as admin'
+                        : 'Unknown Telegram API error'),
+            ]);
+
+            // Fallback: Auto-approve pada error API untuk tidak block user
+            return ['success' => true, 'message' => 'Verification skipped (API error)'];
+
+        } catch (\Exception $e) {
+            Log::error('Social task verification error', [
+                'telegram_id' => $telegramId,
+                'task_url' => $taskUrl,
+                'error' => $e->getMessage(),
+            ]);
+
+            // Fallback: Auto-approve on error untuk tidak block user
+            return ['success' => true, 'message' => 'Verification skipped (error)'];
+        }
+    }
+
+    /**
+     * Extract channel username from Telegram URL
+     */
+    protected function extractChannelUsername(string $url): ?string
+    {        
+        if (preg_match('/t\.me\/([a-zA-Z0-9_]+)/', $url, $matches)) {
+            return '@' . $matches[1];
+        }
+        
+        return null;
     }
 }

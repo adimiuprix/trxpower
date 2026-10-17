@@ -105,10 +105,13 @@ export default function TaskPage({ tasks: initialTasks }: TaskPageProps) {
     }, []);
 
     const handleCheckTask = async (taskId: string, link?: string | null) => {
+        // Jika ada link (social task), buka channel dan langsung verify
         if (link) {
             window.open(link, '_blank');
+            toaster.semantic.info('Opening channel... We will verify your membership shortly.');
         }
         
+        // Submit task ke backend untuk verification (baik dengan atau tanpa link)
         try {
             setLoading(taskId);
             
