@@ -2,6 +2,7 @@ import AppLayout from '@/layouts/AppLayout';
 import { createToaster } from "@codenhub/toaster";
 import React, { useState } from 'react';
 import { CheckCircle, ExternalLink, Gift, Users, MessageCircle, Share2, Award, Zap } from 'lucide-react';
+import { useTelegramContext } from '@/providers/TelegramProvider';
 
 const toaster = createToaster({
     position: "top-center",
@@ -41,6 +42,7 @@ const iconMap: Record<string, any> = {
 export default function TaskPage({ tasks: initialTasks }: TaskPageProps) {
     const [tasks, setTasks] = useState<Task[]>(initialTasks);
     const [loading, setLoading] = useState<string | null>(null);
+    const { refreshDbUser } = useTelegramContext();
 
     // Fetch task status saat component mount
     const fetchTaskStatus = async () => {
@@ -176,6 +178,9 @@ export default function TaskPage({ tasks: initialTasks }: TaskPageProps) {
                 );
                 
                 toaster.semantic.success(`Reward claimed! +${data.data.reward} TRX. Wallet balance: ${data.data.new_wallet_balance} TRX`);
+                
+                // Refresh dbUser untuk update wallet_balance di context
+                await refreshDbUser();
             } else {
                 toaster.semantic.error(data.message || 'Failed to claim reward');
             }

@@ -81,7 +81,33 @@ export default function HomePage({ transactions, minimumClaim }: HomePageProps) 
         }, serverBalance);
     };
 
-    // Sync walletBalance dengan dbUser
+    // Refresh dbUser saat halaman pertama kali di-load atau menjadi visible
+    useEffect(() => {
+        // Refresh immediately on mount
+        refreshDbUser();
+
+        // Refresh saat halaman menjadi visible (user kembali dari tab/halaman lain)
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                refreshDbUser();
+            }
+        };
+
+        // Refresh saat user kembali ke halaman ini (navigation)
+        const handleFocus = () => {
+            refreshDbUser();
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        window.addEventListener('focus', handleFocus);
+
+        return () => {
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            window.removeEventListener('focus', handleFocus);
+        };
+    }, []);
+
+    // Sync walletBalance dengan dbUser setiap kali dbUser berubah
     useEffect(() => {
         setWalletBalance(dbUser?.wallet_balance ?? 0);
     }, [dbUser?.wallet_balance]);
