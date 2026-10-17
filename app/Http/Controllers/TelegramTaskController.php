@@ -19,6 +19,7 @@ class TelegramTaskController extends Controller
                 'category' => $task->category,
                 'icon' => $task->image,
                 'reward' => $task->reward,
+                'link' => $task->task_url
             ];
         });
 

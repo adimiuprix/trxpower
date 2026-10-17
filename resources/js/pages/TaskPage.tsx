@@ -1,5 +1,6 @@
 import AppLayout from '@/layouts/AppLayout';
 import { createToaster } from "@codenhub/toaster";
+import { router } from '@inertiajs/react';
 import React, { useState, useEffect } from 'react';
 import { CheckCircle, ExternalLink, Gift, Users, MessageCircle, Share2, Award, Zap, Clock } from 'lucide-react';
 import { useTelegramContext } from '@/providers/TelegramProvider';
@@ -29,6 +30,13 @@ interface Task {
 
 interface TaskPageProps {
     tasks: Task[];
+}
+
+interface TaskCardProps {
+    task: Task;
+    onCheck: (taskId: string, link?: string | null) => void;
+    onClaim: (taskId: string) => void;
+    loading?: boolean;
 }
 
 // Icon mapping
@@ -308,13 +316,6 @@ export default function TaskPage({ tasks: initialTasks }: TaskPageProps) {
     );
 }
 
-interface TaskCardProps {
-    task: Task;
-    onCheck: (taskId: string, link?: string | null) => void;
-    onClaim: (taskId: string) => void;
-    loading?: boolean;
-}
-
 function TaskCard({ task, onCheck, onClaim, loading }: TaskCardProps) {
     const Icon = iconMap[task.icon] || Gift;
     const [timeUntilReset, setTimeUntilReset] = useState<string>('');
@@ -350,6 +351,13 @@ function TaskCard({ task, onCheck, onClaim, loading }: TaskCardProps) {
         
         return () => clearInterval(interval);
     }, [task.next_reset, task.claimed]);
+
+    const handleClickUrl = () => {
+        console.log(task)
+        if (task?.link) {
+            window.open(task.link, '_blank');
+        }
+    }
     
     return (
         <div className={`task-card ${task.completed ? 'task-completed' : ''} ${task.claimed ? 'task-claimed' : ''}`}>
@@ -359,7 +367,15 @@ function TaskCard({ task, onCheck, onClaim, loading }: TaskCardProps) {
                 </div>
                 
                 <div className="task-info">
-                    <h4 className="task-title">{task.title}</h4>
+
+                    {task.category === 'social' ? (
+                        <h4 className="task-title" style={{ cursor: 'pointer' }} onClick={handleClickUrl}>
+                            {task.title}
+                        </h4>
+                    ) : (
+                        <h4 className="task-title">{task.title}</h4>
+                    )}
+
                     <p className="task-description">{task.description}</p>
                     
                     {task.progress && (
