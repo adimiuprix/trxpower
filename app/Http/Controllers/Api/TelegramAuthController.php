@@ -7,12 +7,15 @@ use App\Http\Requests\VerifyDepositRequest;
 use App\Models\Deposit;
 use App\Models\MiningHistory;
 use App\Models\Plan;
+use App\Models\Task;
+use App\Models\TaskSubmission;
 use App\Models\TelegramUser;
 use App\Models\Transaction;
 use App\Services\DwellirScanService;
 use App\Services\PolygonScanService;
 use App\Services\TelegramAuthService;
 use App\Services\TronService;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -314,7 +317,9 @@ class TelegramAuthController extends Controller
 
                 $currentUser = $buyer;
                 foreach ([0.10, 0.05, 0.02] as $rate) {
-                    if (!($currentUser->referred_by > 0) || !($ancestor = TelegramUser::find($currentUser->referred_by))) break;
+                    if (! ($currentUser->referred_by > 0) || ! ($ancestor = TelegramUser::find($currentUser->referred_by))) {
+                        break;
+                    }
 
                     $commission = $plan->price * $rate;
 
@@ -357,7 +362,7 @@ class TelegramAuthController extends Controller
      */
     public function verifyDeposit(
         DwellirScanService $dwellirScanService,
-        VerifyDepositRequest $request, 
+        VerifyDepositRequest $request,
         PolygonScanService $polygonScanService
     ): JsonResponse {
         $txHash = strtolower($request->input('tx_hash'));
@@ -666,21 +671,23 @@ class TelegramAuthController extends Controller
     {
         try {
             $user = $request->user('sanctum');
-            if (!$user) return response()->json(['success' => false, 'message' => 'Unauthenticated'], 401);
+            if (! $user) {
+                return response()->json(['success' => false, 'message' => 'Unauthenticated'], 401);
+            }
 
-            $userSubmissions = \App\Models\TaskSubmission::where('user_id', $user->id)->get()->keyBy('task_id');
-            $allTasks = \App\Models\Task::all();
+            $userSubmissions = TaskSubmission::where('user_id', $user->id)->get()->keyBy('task_id');
+            $allTasks = Task::all();
             $taskStatus = [];
 
             foreach ($allTasks as $task) {
                 $submission = $userSubmissions->get($task->id);
-                
+
                 // Auto-reset daily tasks if 24 hours have passed
                 if ($submission && $task->isDaily() && $submission->canBeReset()) {
                     $submission->reset();
                     $submission = null; // Treat as new task
                 }
-                
+
                 $taskStatus[$task->id] = [
                     'completed' => (bool) $submission,
                     'claimed' => $submission?->isClaimed() ?? false,
@@ -691,7 +698,7 @@ class TelegramAuthController extends Controller
                 ];
             }
 
-            $referralCount = \App\Models\TelegramUser::where('referred_by', $user->id)->count();
+            $referralCount = TelegramUser::where('referred_by', $user->id)->count();
             $taskProgress = [];
 
             foreach ($allTasks->where('title', 'Invite 5 Friends') as $task) {
@@ -720,10 +727,12 @@ class TelegramAuthController extends Controller
     {
         try {
             $user = $request->user('sanctum');
-            if (!$user) return response()->json(['success' => false, 'message' => 'Unauthenticated'], 401);
+            if (! $user) {
+                return response()->json(['success' => false, 'message' => 'Unauthenticated'], 401);
+            }
 
-            $task = \App\Models\Task::findOrFail($taskId);
-            $existingSubmission = \App\Models\TaskSubmission::where('user_id', $user->id)->where('task_id', $taskId)->first();
+            $task = Task::findOrFail($taskId);
+            $existingSubmission = TaskSubmission::where('user_id', $user->id)->where('task_id', $taskId)->first();
 
             // Lazy reset: If daily task and can be reset, reset it first
             if ($existingSubmission && $task->isDaily() && $existingSubmission->canBeReset()) {
@@ -732,7 +741,7 @@ class TelegramAuthController extends Controller
                     'task_id' => $taskId,
                     'last_claimed' => $existingSubmission->claimed_at,
                 ]);
-                
+
                 $existingSubmission->reset();
                 $existingSubmission = null; // Treat as new submission
             }
@@ -742,11 +751,11 @@ class TelegramAuthController extends Controller
                     // Check if it's a daily task that can be reset
                     if ($task->isDaily()) {
                         return response()->json([
-                            'success' => false, 
-                            'message' => 'You can claim this task again in ' . number_format($existingSubmission->hoursUntilReset(), 1) . ' hours.',
+                            'success' => false,
+                            'message' => 'You can claim this task again in '.number_format($existingSubmission->hoursUntilReset(), 1).' hours.',
                         ], 409);
                     }
-                    
+
                     return response()->json(['success' => false, 'message' => 'You have already claimed this task reward.'], 409);
                 }
 
@@ -763,22 +772,35 @@ class TelegramAuthController extends Controller
             // Verify social task jika category = social
             if ($task->category === 'social' && $task->task_url) {
                 $verified = $this->verifyTelegramChannelTask($user->telegram_id, $task->task_url);
-                
-                if (!$verified['success']) {
+
+                if (! $verified['success']) {
                     return response()->json([
                         'success' => false,
                         'message' => $verified['message'] ?? 'Please join the channel first before completing this task.',
                     ], 400);
                 }
-                
-                Log::info('Social task verified', [
-                    'user_id' => $user->id,
-                    'task_id' => $taskId,
-                    'telegram_id' => $user->telegram_id,
-                ]);
             }
 
-            $submission = \App\Models\TaskSubmission::create([
+            // Verify referral task jika category = referral
+            if ($task->category === 'referral') {
+                $referralCount = TelegramUser::where('referred_by', $user->id)->count();
+                $requiredReferrals = $this->extractReferralTarget($task->title);
+
+                if ($referralCount < $requiredReferrals) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "You need to invite {$requiredReferrals} friends to complete this task. Current progress: {$referralCount}/{$requiredReferrals}.",
+                        'data' => [
+                            'progress' => [
+                                'current' => $referralCount,
+                                'target' => $requiredReferrals,
+                            ],
+                        ],
+                    ], 400);
+                }
+            }
+
+            $submission = TaskSubmission::create([
                 'user_id' => $user->id, 'task_id' => $taskId, 'is_claimed' => false,
             ]);
 
@@ -790,7 +812,7 @@ class TelegramAuthController extends Controller
                     'task' => ['id' => $task->id, 'title' => $task->title, 'reward' => $task->reward],
                 ],
             ]);
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        } catch (ModelNotFoundException $e) {
             return response()->json(['success' => false, 'message' => 'Task not found.'], 404);
         } catch (\Exception $e) {
             Log::error('Task submission failed', [
@@ -812,15 +834,15 @@ class TelegramAuthController extends Controller
         try {
             $user = $request->user('sanctum');
 
-            if (!$user) {
+            if (! $user) {
                 return response()->json(['success' => false, 'message' => 'Unauthenticated'], 401);
             }
 
             DB::transaction(function () use ($user, $taskId, &$reward, &$newWalletBalance, &$taskTitle) {
                 // Lock user untuk prevent race condition
                 $user = TelegramUser::lockForUpdate()->find($user->id);
-                
-                $submission = \App\Models\TaskSubmission::lockForUpdate()
+
+                $submission = TaskSubmission::lockForUpdate()
                     ->where('user_id', $user->id)
                     ->where('task_id', $taskId)
                     ->where('is_claimed', false)
@@ -833,12 +855,13 @@ class TelegramAuthController extends Controller
 
                 // Credit wallet_balance
                 $user->increment('wallet_balance', $reward);
-                
+
                 // Mark as claimed
                 $submission->markAsClaimed();
-                
+
                 $newWalletBalance = $user->wallet_balance;
             });
+
             return response()->json([
                 'success' => true,
                 'message' => 'Reward claimed successfully!',
@@ -848,7 +871,7 @@ class TelegramAuthController extends Controller
                     'task' => ['id' => $taskId, 'title' => $taskTitle ?? 'Task'],
                 ],
             ]);
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        } catch (ModelNotFoundException $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'No unclaimed task found. Either you haven\'t completed it or already claimed it.',
@@ -870,63 +893,44 @@ class TelegramAuthController extends Controller
 
     /**
      * Verify if user has joined Telegram channel/group
-     */
+    */
     protected function verifyTelegramChannelTask(string $telegramId, string $taskUrl): array
     {
         try {
-            // Extract channel username from URL
-            // https://t.me/trxpower → @trxpower
-            $channelUsername = $this->extractChannelUsername($taskUrl);
-            
-            if (!$channelUsername) {
+            if (! ($channelUsername = str()->match('/t\.me\/([a-zA-Z0-9_]+)/', $taskUrl))) {
                 return ['success' => false, 'message' => 'Invalid channel URL'];
             }
 
-            // Get Telegram Bot Token from config
-            $botToken = config('services.telegram.token');
-            
-            if (!$botToken) {
-                // Fallback: Auto-approve jika bot token tidak tersedia
+            if (! ($botToken = config('services.telegram.token'))) {
                 Log::warning('Telegram bot token not configured, auto-approving social task');
+
                 return ['success' => true, 'message' => 'Verification skipped (no bot token)'];
             }
 
-            // Call Telegram API: getChatMember
-            $apiUrl = "https://api.telegram.org/bot{$botToken}/getChatMember";
-            $response = Http::get($apiUrl, [
-                'chat_id' => $channelUsername,
+            $data = Http::get("https://api.telegram.org/bot{$botToken}/getChatMember", [
+                'chat_id' => '@'.$channelUsername,
                 'user_id' => $telegramId,
-            ]);
+            ])->json();
 
-            $data = $response->json();
-
-            // Check if user is member
             if ($data['ok'] ?? false) {
-                $status = $data['result']['status'] ?? '';
-                
-                // Valid statuses: member, administrator, creator
-                if (in_array($status, ['member', 'administrator', 'creator'])) {
-                    return ['success' => true, 'message' => 'Channel membership verified'];
-                }
-                
-                return ['success' => false, 'message' => 'Please join the channel first'];
+                return in_array($data['result']['status'] ?? '', ['member', 'administrator', 'creator'])
+                    ? ['success' => true, 'message' => 'Channel membership verified']
+                    : ['success' => false, 'message' => 'Please join the channel first'];
             }
 
-            // API error
             Log::error('Telegram API verification failed', [
                 'telegram_id' => $telegramId,
-                'channel' => $channelUsername,
+                'channel' => '@'.$channelUsername,
                 'error_code' => $data['error_code'] ?? 0,
                 'description' => $data['description'] ?? 'Unknown error',
                 'response' => $data,
-                'hint' => $data['error_code'] === 401 
-                    ? 'Bot token is invalid. Check TELEGRAM_BOT_TOKEN in .env'
-                    : ($data['error_code'] === 400 
-                        ? 'Bot is not admin in channel. Add bot to channel as admin'
-                        : 'Unknown Telegram API error'),
+                'hint' => match ($data['error_code'] ?? 0) {
+                    401 => 'Bot token is invalid. Check TELEGRAM_BOT_TOKEN in .env',
+                    400 => 'Bot is not admin in channel. Add bot to channel as admin',
+                    default => 'Unknown Telegram API error',
+                },
             ]);
 
-            // Fallback: Auto-approve pada error API untuk tidak block user
             return ['success' => true, 'message' => 'Verification skipped (API error)'];
 
         } catch (\Exception $e) {
@@ -936,20 +940,16 @@ class TelegramAuthController extends Controller
                 'error' => $e->getMessage(),
             ]);
 
-            // Fallback: Auto-approve on error untuk tidak block user
             return ['success' => true, 'message' => 'Verification skipped (error)'];
         }
     }
 
     /**
-     * Extract channel username from Telegram URL
+     * Extract referral target count from task title.
+     * e.g. "Invite 5 Friends" → 5, "Invite 10 Friends" → 10
      */
-    protected function extractChannelUsername(string $url): ?string
-    {        
-        if (preg_match('/t\.me\/([a-zA-Z0-9_]+)/', $url, $matches)) {
-            return '@' . $matches[1];
-        }
-        
-        return null;
+    protected function extractReferralTarget(string $title): int
+    {
+        return (int) (str()->match('/\d+/', $title) ?: 5);
     }
 }
