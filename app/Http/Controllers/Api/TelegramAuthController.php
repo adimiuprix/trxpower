@@ -661,7 +661,6 @@ class TelegramAuthController extends Controller
     /**
      * Get task status for authenticated user
      */
-
     public function getTaskStatus(Request $request): JsonResponse
     {
         try {
@@ -674,9 +673,20 @@ class TelegramAuthController extends Controller
 
             foreach ($allTasks as $task) {
                 $submission = $userSubmissions->get($task->id);
+                
+                // Auto-reset daily tasks if 24 hours have passed
+                if ($submission && $task->isDaily() && $submission->canBeReset()) {
+                    $submission->reset();
+                    $submission = null; // Treat as new task
+                }
+                
                 $taskStatus[$task->id] = [
                     'completed' => (bool) $submission,
                     'claimed' => $submission?->isClaimed() ?? false,
+                    'can_reset' => $task->isDaily(),
+                    'next_reset' => $submission && $task->isDaily() && $submission->claimed_at
+                        ? $submission->getNextResetTimestamp()
+                        : null,
                 ];
             }
 
@@ -714,8 +724,28 @@ class TelegramAuthController extends Controller
             $task = \App\Models\Task::findOrFail($taskId);
             $existingSubmission = \App\Models\TaskSubmission::where('user_id', $user->id)->where('task_id', $taskId)->first();
 
+            // Lazy reset: If daily task and can be reset, reset it first
+            if ($existingSubmission && $task->isDaily() && $existingSubmission->canBeReset()) {
+                Log::info('Daily task auto-reset triggered', [
+                    'user_id' => $user->id,
+                    'task_id' => $taskId,
+                    'last_claimed' => $existingSubmission->claimed_at,
+                ]);
+                
+                $existingSubmission->reset();
+                $existingSubmission = null; // Treat as new submission
+            }
+
             if ($existingSubmission) {
                 if ($existingSubmission->isClaimed()) {
+                    // Check if it's a daily task that can be reset
+                    if ($task->isDaily()) {
+                        return response()->json([
+                            'success' => false, 
+                            'message' => 'You can claim this task again in ' . number_format($existingSubmission->hoursUntilReset(), 1) . ' hours.',
+                        ], 409);
+                    }
+                    
                     return response()->json(['success' => false, 'message' => 'You have already claimed this task reward.'], 409);
                 }
 
@@ -769,30 +799,50 @@ class TelegramAuthController extends Controller
                 return response()->json(['success' => false, 'message' => 'Unauthenticated'], 401);
             }
 
-            $submission = \App\Models\TaskSubmission::where('user_id', $user->id)
-                ->where('task_id', $taskId)->where('is_claimed', false)
-                ->with('task')->firstOrFail();
+            DB::transaction(function () use ($user, $taskId, &$reward, &$newWalletBalance, &$taskTitle) {
+                // Lock user untuk prevent race condition
+                $user = TelegramUser::lockForUpdate()->find($user->id);
+                
+                $submission = \App\Models\TaskSubmission::lockForUpdate()
+                    ->where('user_id', $user->id)
+                    ->where('task_id', $taskId)
+                    ->where('is_claimed', false)
+                    ->with('task')
+                    ->firstOrFail();
 
-            $task = $submission->task;
+                $task = $submission->task;
+                $reward = $task->reward;
+                $taskTitle = $task->title;
 
-            DB::transaction(function () use ($user, $submission, $task) {
-                $user->increment('wallet_balance', $task->reward);
+                // Credit wallet_balance
+                $user->increment('wallet_balance', $reward);
+                
+                // Mark as claimed
                 $submission->markAsClaimed();
+                
+                $newWalletBalance = $user->wallet_balance;
             });
+
+            Log::info('Task reward claimed', [
+                'user_id' => $user->id,
+                'task_id' => $taskId,
+                'task_title' => $taskTitle ?? 'Unknown',
+                'reward' => $reward ?? 0,
+            ]);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Reward claimed successfully!',
                 'data' => [
-                    'reward' => $task->reward,
-                    'new_wallet_balance' => $user->fresh()->wallet_balance,
-                    'task' => ['id' => $task->id, 'title' => $task->title],
+                    'reward' => $reward ?? 0,
+                    'new_wallet_balance' => $newWalletBalance ?? $user->wallet_balance,
+                    'task' => ['id' => $taskId, 'title' => $taskTitle ?? 'Task'],
                 ],
             ]);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'No unclaimed task found. Please complete the task first.',
+                'message' => 'No unclaimed task found. Either you haven\'t completed it or already claimed it.',
             ], 404);
         } catch (\Exception $e) {
             Log::error('Task reward claim failed', [

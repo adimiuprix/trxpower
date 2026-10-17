@@ -1,7 +1,7 @@
 import AppLayout from '@/layouts/AppLayout';
 import { createToaster } from "@codenhub/toaster";
-import React, { useState } from 'react';
-import { CheckCircle, ExternalLink, Gift, Users, MessageCircle, Share2, Award, Zap } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { CheckCircle, ExternalLink, Gift, Users, MessageCircle, Share2, Award, Zap, Clock } from 'lucide-react';
 import { useTelegramContext } from '@/providers/TelegramProvider';
 
 const toaster = createToaster({
@@ -19,6 +19,8 @@ interface Task {
     link?: string | null;
     completed: boolean;
     claimed: boolean;
+    can_reset?: boolean;        // Apakah task ini bisa di-reset (daily task)
+    next_reset?: number | null; // Unix timestamp kapan bisa claim lagi
     progress?: {
         current: number;
         target: number;
@@ -90,9 +92,16 @@ export default function TaskPage({ tasks: initialTasks }: TaskPageProps) {
         }
     };
 
-    // Fetch status saat component mount
+    // Fetch task status saat component mount
     React.useEffect(() => {
         fetchTaskStatus();
+        
+        // Auto-refresh setiap 1 menit untuk check reset
+        const interval = setInterval(() => {
+            fetchTaskStatus();
+        }, 60000); // 60 seconds
+        
+        return () => clearInterval(interval);
     }, []);
 
     const handleCheckTask = async (taskId: string, link?: string | null) => {
@@ -305,6 +314,39 @@ interface TaskCardProps {
 
 function TaskCard({ task, onCheck, onClaim, loading }: TaskCardProps) {
     const Icon = iconMap[task.icon] || Gift;
+    const [timeUntilReset, setTimeUntilReset] = useState<string>('');
+    
+    // Countdown timer untuk daily tasks
+    useEffect(() => {
+        if (!task.next_reset || !task.claimed) return;
+        
+        const updateTimer = () => {
+            const now = Math.floor(Date.now() / 1000); // Current unix timestamp
+            const diff = task.next_reset! - now;
+            
+            if (diff <= 0) {
+                setTimeUntilReset('Ready!');
+                return;
+            }
+            
+            const hours = Math.floor(diff / 3600);
+            const minutes = Math.floor((diff % 3600) / 60);
+            const seconds = diff % 60;
+            
+            if (hours > 0) {
+                setTimeUntilReset(`${hours}h ${minutes}m`);
+            } else if (minutes > 0) {
+                setTimeUntilReset(`${minutes}m ${seconds}s`);
+            } else {
+                setTimeUntilReset(`${seconds}s`);
+            }
+        };
+        
+        updateTimer(); // Initial update
+        const interval = setInterval(updateTimer, 1000);
+        
+        return () => clearInterval(interval);
+    }, [task.next_reset, task.claimed]);
     
     return (
         <div className={`task-card ${task.completed ? 'task-completed' : ''} ${task.claimed ? 'task-claimed' : ''}`}>
@@ -338,6 +380,21 @@ function TaskCard({ task, onCheck, onClaim, loading }: TaskCardProps) {
                     <span className="task-reward-label">Reward</span>
                     <span className="task-reward-amount">+{Number(task.reward).toFixed(4)} TRX</span>
                 </div>
+                
+                {/* Show reset timer for claimed daily tasks */}
+                {task.claimed && task.can_reset && task.next_reset && (
+                    <div className="task-reset-timer" style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        fontSize: '12px',
+                        color: '#6b7280',
+                        marginTop: '4px'
+                    }}>
+                        <Clock size={14} />
+                        <span>Reset in: {timeUntilReset}</span>
+                    </div>
+                )}
                 
                 {task.claimed ? (
                     <button className="task-btn task-btn-claimed" disabled>

@@ -85,4 +85,30 @@ class Task extends Model
     {
         return $query->where('reward', '>=', $minReward);
     }
+
+    /**
+     * Check if this is a daily task.
+     */
+    public function isDaily(): bool
+    {
+        return $this->category === 'daily';
+    }
+
+    /**
+     * Check if task can be reset for user.
+     */
+    public function canBeResetFor(int $userId): bool
+    {
+        if (!$this->isDaily()) {
+            return false;
+        }
+        
+        $submission = $this->getUserSubmission($userId);
+        
+        if (!$submission || !$submission->isClaimed()) {
+            return false;
+        }
+        
+        return $submission->canBeReset();
+    }
 }
