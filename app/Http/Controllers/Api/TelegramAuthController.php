@@ -763,8 +763,6 @@ class TelegramAuthController extends Controller
                 'user_id' => $user->id, 'task_id' => $taskId, 'is_claimed' => false,
             ]);
 
-            Log::info('Task completed', ['user_id' => $user->id, 'task_id' => $taskId, 'submission_id' => $submission->id]);
-
             return response()->json([
                 'success' => true,
                 'message' => 'Task completed! You can claim the reward now.',
@@ -822,14 +820,6 @@ class TelegramAuthController extends Controller
                 
                 $newWalletBalance = $user->wallet_balance;
             });
-
-            Log::info('Task reward claimed', [
-                'user_id' => $user->id,
-                'task_id' => $taskId,
-                'task_title' => $taskTitle ?? 'Unknown',
-                'reward' => $reward ?? 0,
-            ]);
-
             return response()->json([
                 'success' => true,
                 'message' => 'Reward claimed successfully!',
